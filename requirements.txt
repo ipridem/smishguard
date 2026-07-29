@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+SQLAlchemy
+alembic
+python-dotenv
+pytest
+httpx
+scikit-learn
+joblib
+
+# uncomment if you want to point DATABASE_URL at Postgres instead of the
+# default SQLite (this project is DB-agnostic, same as it was in FinGuard):
+# psycopg2-binary

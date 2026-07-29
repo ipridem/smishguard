@@ -1,0 +1,82 @@
+/* Hallmark · theme: Cobalt · genre: modern-minimal
+ * paper band: cool light · display style: grotesk-sans · accent hue: electric cobalt
+ * Served from /tokens.css so the token block is portable AND actually reachable.
+ */
+:root {
+  /* — Surface —————————————————————————— */
+  --color-paper:        oklch(98.5% 0.004 250);
+  --color-paper-2:      oklch(96.4% 0.005 252);
+  --color-graphite:     oklch(22% 0.016 260);
+  --color-graphite-2:   oklch(19% 0.016 260);
+
+  /* — Ink ——————————————————————————————— */
+  --color-ink:          oklch(24% 0.020 258);
+  --color-ink-2:        oklch(34% 0.018 257);
+  --color-ink-3:        oklch(52% 0.014 256);
+  --color-graphite-ink: oklch(92% 0.008 250);
+  --color-graphite-ink-2: oklch(72% 0.012 253);
+  --color-graphite-ink-3: oklch(56% 0.014 255);
+
+  /* — Rules ————————————————————————————— */
+  --color-rule:         oklch(91% 0.006 252);
+  --color-rule-2:       oklch(31% 0.014 260);
+
+  /* — The one signal ———————————————————— */
+  --color-accent:       oklch(58% 0.200 256);
+  --color-accent-lift:  oklch(66% 0.180 256);
+  --color-accent-ink:   oklch(99% 0.002 250);
+  --color-accent-wash:  oklch(94% 0.032 254);
+
+  /* — Verdict semantics ————————————————— *
+   * A classifier verdict is information, not decoration, so it earns colour.
+   * Always paired with a text label — colour is never the only channel. */
+  --color-danger:       oklch(58% 0.185 25);
+  --color-danger-ink:   oklch(72% 0.160 27);
+  --color-safe:         oklch(58% 0.130 158);
+  --color-safe-ink:     oklch(74% 0.130 158);
+  --color-warn:         oklch(70% 0.145 75);
+  --color-warn-ink:     oklch(80% 0.135 78);
+
+  /* — Type —————————————————————————————— */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-xs:      0.75rem;
+  --text-sm:      0.8125rem;
+  --text-base:    0.9375rem;
+  --text-lg:      1.0625rem;
+  --text-xl:      1.375rem;
+  --text-2xl:     1.75rem;
+  --text-display: clamp(2.25rem, 4.2vw + 0.75rem, 3.75rem);
+
+  /* — Space (4pt scale) ————————————————— */
+  --space-2xs:    0.25rem;
+  --space-xs:     0.5rem;
+  --space-sm:     0.75rem;
+  --space-md:     1rem;
+  --space-lg:     1.5rem;
+  --space-xl:     2rem;
+  --space-2xl:    3rem;
+  --space-3xl:    4.5rem;
+
+  /* — Radii (drawn with a ruler) ———————— */
+  --radius-control: 6px;
+  --radius-card:    10px;
+
+  /* — Motion ———————————————————————————— */
+  --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:      cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-short:    120ms;
+  --dur-mid:      240ms;
+  --dur-long:     560ms;
+
+  /* — Elevation scale (named, never 9999) — */
+  --z-base:       0;
+  --z-raised:     10;
+  --z-sticky:     20;
+  --z-overlay:    30;
+  --z-modal:      40;
+  --z-toast:      50;
+}

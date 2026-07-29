@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FinGuard — SMS smishing classifier</title>
+  <meta name="description" content="Classify an SMS as legitimate or one of five fraud patterns, with the full risk-signal readout behind the verdict.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="shell nav__inner">
+    <div class="nav__mark">
+      <span class="nav__word">FinGuard</span>
+      <span class="mono-label nav__tag">Smishing classifier</span>
+    </div>
+    <a class="nav__link" href="/docs">API docs&nbsp;&#8599;</a>
+  </div>
+</nav>
+
+<header class="header">
+  <div class="shell header__grid">
+    <h1>Classify an SMS.<br>See the reasoning.</h1>
+    <p class="header__lede">
+      Paste a message and get one of six labels, a confidence score, and every risk signal
+      the model checked — <strong>including the ones it didn&rsquo;t find</strong>. Trained on
+      Zimbabwean mobile-money, SIM-registration and delivery-scam patterns.
+    </p>
+  </div>
+</header>
+
+<main class="bench">
+  <div class="shell">
+    <div class="tabs" role="tablist" aria-label="Input mode">
+      <button class="tab" role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true" type="button">Single message</button>
+      <button class="tab" role="tab" id="tab-batch" aria-controls="panel-batch" aria-selected="false" type="button">CSV batch</button>
+    </div>
+
+    <section class="panel" id="panel-single" role="tabpanel" aria-labelledby="tab-single">
+      <form id="single-form" novalidate>
+        <label class="field">
+          <span class="mono-label field__label">SMS text</span>
+          <textarea class="input" id="sms-text" name="text" rows="4" maxlength="2000"
+            placeholder="Ndapota confirmai PIN yenyu pa http://ecocash-verify.tk/x9k2 kuti musarasikirwe nemari yenyu."
+            aria-describedby="single-hint"></textarea>
+        </label>
+        <div class="bench__actions">
+          <button class="btn" id="single-submit" type="submit">Classify</button>
+          <p class="hint" id="single-hint">Nothing is stored. The message is scored in-process and discarded.</p>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" hidden>
+      <form id="batch-form" novalidate>
+        <label class="field">
+          <span class="mono-label field__label">CSV file — one message per row, first column</span>
+          <input class="file" id="csv-file" name="file" type="file" accept=".csv,text/csv">
+        </label>
+        <div class="bench__actions">
+          <button class="btn" id="batch-submit" type="submit">Classify batch</button>
+          <p class="hint" id="batch-hint">Up to <span id="max-rows">500</span> rows per upload.</p>
+        </div>
+      </form>
+    </section>
+
+    <div id="form-error" role="alert" aria-live="polite"></div>
+  </div>
+</main>
+
+<section class="results" id="results" aria-live="polite">
+  <div class="shell">
+
+    <!-- Empty state: name what the model checks, so the panel is never a void -->
+    <div id="state-empty">
+      <div class="results__head">
+        <h2>Readout</h2>
+        <span class="mono-label">Awaiting input</span>
+      </div>
+      <p class="empty">
+        Classify a message to see its verdict, the features that drove it, and the full
+        risk-signal checklist — each signal reported whether or not it fired, with the
+        weight the model learned for it.
+      </p>
+    </div>
+
+    <!-- Single-message result -->
+    <div id="state-single" hidden>
+      <div class="results__head">
+        <div class="verdict" id="verdict">
+          <span class="verdict__chip" id="verdict-risk"></span>
+          <span class="confidence"><b id="verdict-riskpct"></b> risk</span>
+          <span class="verdict__sep" aria-hidden="true"></span>
+          <span class="confidence">closest match <b id="verdict-label"></b> <span id="verdict-conf"></span></span>
+        </div>
+        <span class="mono-label" id="verdict-meta"></span>
+      </div>
+
+      <div id="uncertain-note"></div>
+
+      <div class="readout">
+        <div class="readout__col">
+          <h3>Risk signals checked</h3>
+          <p class="readout__note">
+            Weight is the signal&rsquo;s learned influence toward this label; sign shows direction.
+            A filled mark means the signal fired.
+          </p>
+          <ul class="signals" id="signals-list"></ul>
+        </div>
+        <div class="readout__col">
+          <h3>Top contributing features</h3>
+          <p class="readout__note">
+            Feature value &times; weight, ranked. Numeric specifics are normalised to placeholder
+            tokens before vectorising, so incidental digits never become vocabulary.
+          </p>
+          <ul class="tokens" id="tokens-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch result -->
+    <div id="state-batch" hidden>
+      <div class="results__head">
+        <h2>Batch readout</h2>
+        <span class="mono-label" id="batch-meta"></span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Message</th>
+              <th scope="col">Verdict</th>
+              <th scope="col">Risk</th>
+              <th scope="col">Closest match</th>
+            </tr>
+          </thead>
+          <tbody id="batch-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="shell footer__inner">
+    <span><b>FinGuard</b> — smishing classifier, Zimbabwe mobile-money context.</span>
+    <span>Logistic regression · TF-IDF + 12 engineered signals</span>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
