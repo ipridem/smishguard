@@ -147,9 +147,16 @@ function renderSingle(result) {
   $("verdict-meta").textContent = `${result.risk_signals.length} signals checked`;
 
   renderUncertainty(result.risk, result.confidence);
+  renderLlmOpinion(result.llm_opinion);
   renderSignals(result.risk_signals);
   renderTokens(result.top_tokens);
   showState("state-single");
+
+  // #results itself isn't a live region — re-rendering the full readout on
+  // every classify would read the whole panel aloud. This is the one line SR
+  // users actually hear.
+  $("a11y-status").textContent =
+    `${verdict.text}, ${result.risk == null ? "risk unscored" : pct(result.risk) + " risk"}.`;
 }
 
 function renderUncertainty(risk, confidence) {
@@ -201,6 +208,38 @@ function renderUncertainty(risk, confidence) {
   wrap.className = "uncertain";
   wrap.append(icon, body);
   host.replaceChildren(wrap);
+}
+
+/* Second opinion from an LLM, only present when the local model's risk was
+ * inconclusive AND a Groq key is configured server-side. Rendered as a
+ * clearly separate block — never merged into the primary verdict — because
+ * it's not mechanistically explainable the way the weighted signals are. */
+function renderLlmOpinion(opinion) {
+  const host = $("llm-opinion");
+  host.replaceChildren();
+  if (!opinion) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "llm-opinion";
+  wrap.dataset.verdict = opinion.verdict;
+
+  const head = document.createElement("p");
+  head.className = "llm-opinion__head";
+  const badge = document.createElement("span");
+  badge.className = "mono-label";
+  badge.textContent = "AI second opinion";
+  const verdict = document.createElement("b");
+  verdict.textContent = `${opinion.verdict === "fraud" ? "Likely fraud" : "Likely legitimate"} `;
+  const conf = document.createElement("span");
+  conf.textContent = `(${pct(opinion.confidence)} confidence)`;
+  head.append(badge, document.createTextNode(" "), verdict, conf);
+
+  const reasoning = document.createElement("p");
+  reasoning.className = "llm-opinion__reasoning";
+  reasoning.textContent = opinion.reasoning;
+
+  wrap.append(head, reasoning);
+  host.append(wrap);
 }
 
 function renderSignals(signals) {
@@ -327,6 +366,8 @@ function renderBatch(rows) {
   const flagged = rows.filter((r) => r.risk != null && r.risk >= meta.risk_fraud_threshold).length;
   $("batch-meta").textContent = `${rows.length} messages · ${flagged} at or above ${pct(meta.risk_fraud_threshold)} risk`;
   showState("state-batch");
+
+  $("a11y-status").textContent = `${rows.length} messages classified, ${flagged} flagged.`;
 }
 
 /* ——— Boot ———————————————————————————————————————————————— */
@@ -336,5 +377,6 @@ fetch("/api/meta")
     if (!data) return;
     Object.assign(meta, data);
     $("max-rows").textContent = String(data.max_batch_rows);
+    $("llm-disclosure").hidden = !data.llm_review_available;
   })
   .catch(() => { /* defaults already cover it */ });

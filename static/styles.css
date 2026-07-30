@@ -1,8 +1,7 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench · theme: Cobalt
- * enrichment: none (typography + CSS-drawn signal marks) · nav: bordered flush bar · footer: Ft2
+/* Design system: modern-minimal, "Cobalt" theme, Workbench layout.
+ * enrichment: none (typography + CSS-drawn signal marks) · nav: bordered flush bar
  * tone: technical · audience: security analyst / examiner · anchor hue: electric cobalt 256
- * pre-emit critique: P5 H5 E4 S5 R4 V4
- * Deviation: Cobalt's ⌘K palette skipped — two modes, no navigable destinations.
+ * Note: no command-palette control — two modes, no navigable destinations to search.
  */
 @import url("tokens.css");
 
@@ -334,6 +333,34 @@ a { color: inherit; }
 .uncertain svg { flex: none; margin-top: 2px; }
 .uncertain b { color: var(--color-graphite-ink); font-weight: 600; }
 
+/* AI second opinion — deliberately NOT styled like the weighted-signal
+ * readout below it. That panel is mechanistically explainable (value ×
+ * weight); this is a black-box verdict from an external model, so it reads
+ * as its own labelled aside, not a peer of the primary result. */
+.llm-opinion {
+  margin: 0 0 var(--space-lg);
+  padding: var(--space-md);
+  border: 1px dashed var(--color-rule-2);
+  border-radius: var(--radius-control);
+  font-size: var(--text-sm);
+}
+.llm-opinion__head {
+  margin: 0 0 var(--space-2xs);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  color: var(--color-graphite-ink-2);
+}
+.llm-opinion__head b { color: var(--color-graphite-ink); font-weight: 600; }
+.llm-opinion[data-verdict="fraud"] .llm-opinion__head b { color: var(--color-danger-ink); }
+.llm-opinion[data-verdict="legit"] .llm-opinion__head b { color: var(--color-safe-ink); }
+.llm-opinion__reasoning {
+  margin: 0;
+  color: var(--color-graphite-ink-3);
+  max-width: 62ch;
+}
+
 .readout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -452,6 +479,7 @@ td.num {
 }
 td[data-severity="danger"] { color: var(--color-danger-ink); }
 td[data-severity="safe"]   { color: var(--color-safe-ink); }
+td[data-severity="warn"]   { color: var(--color-warn-ink); }
 .cell-text { color: var(--color-graphite-ink-2); max-width: 46ch; }
 .cell-muted { color: var(--color-graphite-ink-3); white-space: nowrap; }
 

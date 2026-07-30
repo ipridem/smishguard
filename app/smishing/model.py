@@ -22,6 +22,8 @@ FEATURE_LABELS = {
     "deceptive_subdomain": "Real domain hidden behind a lookalike subdomain",
     "passive_consent_device_change": "Account change proceeds by default unless you act",
     "authorization_via_inbound_call": "Told to approve a prompt or read a code during an inbound call",
+    "screen_mismatch_coaching": "Pre-excuses the approval screen not matching the message's story",
+    "ussd_advance_fee_offer": "USSD code paired with a promise of getting back more than you send",
 }
 
 

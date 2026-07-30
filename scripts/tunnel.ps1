@@ -11,7 +11,7 @@
 #   powershell -File tunnel.ps1 -Command "python manage.py runserver 8000" -Port 8000
 
 param(
-    [string]$Command = ".venv\Scripts\python.exe wsgi.py",  # command that starts your dev server
+    [string]$Command = ".venv\Scripts\python.exe -m uvicorn app.main:app --port 5000",  # command that starts your dev server
     [int]$Port = 5000,                                       # port that command listens on
     [string]$WorkingDirectory = (Split-Path -Parent $PSScriptRoot),
     [int]$TimeoutMinutes = 0,   # 0 = run until Ctrl+C

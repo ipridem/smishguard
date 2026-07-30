@@ -8,3 +8,4 @@ ml/*.joblib
 ml/*.pkl
 .pytest_cache/
 .hallmark/
+.claude/

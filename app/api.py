@@ -1,12 +1,13 @@
 """JSON API for the smishing classifier."""
 import csv
 import io
-from functools import lru_cache
+import os
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.config import Config
+from app.smishing.llm_review import groq_second_opinion
 from app.smishing.model import classify, load_model
 
 router = APIRouter(prefix="/api")
@@ -20,11 +21,21 @@ RISK_LEGIT_THRESHOLD = 0.4    # at or below: call it legitimate
 # between the two the model genuinely can't tell — that's when to warn
 LOW_CONFIDENCE_THRESHOLD = 0.6  # applies to the *class* label only
 
+# uvicorn --reload watches .py files, not the .joblib artifact — a
+# `scripts/train_model.py` run while the server is up would otherwise serve
+# stale predictions from the pipeline loaded at process start until a manual
+# restart. Reload whenever the file's mtime moves past what we last loaded.
+_pipeline = None
+_pipeline_mtime = None
 
-@lru_cache(maxsize=1)
+
 def get_pipeline():
-    # the joblib artifact is ~2MB; load once per process, not per request
-    return load_model(Config.SMISHING_MODEL_PATH)
+    global _pipeline, _pipeline_mtime
+    mtime = os.path.getmtime(Config.SMISHING_MODEL_PATH)
+    if _pipeline is None or mtime != _pipeline_mtime:
+        _pipeline = load_model(Config.SMISHING_MODEL_PATH)
+        _pipeline_mtime = mtime
+    return _pipeline
 
 
 class ClassifyRequest(BaseModel):
@@ -43,12 +54,19 @@ class RiskSignal(BaseModel):
     note: str | None = None
 
 
+class LlmOpinion(BaseModel):
+    verdict: str
+    confidence: float
+    reasoning: str
+
+
 class ClassifyResponse(BaseModel):
     label: str
     confidence: float | None   # certainty in the specific class
     risk: float | None         # P(any fraud class) — the "is this a scam?" answer
     top_tokens: list[TokenContribution]
     risk_signals: list[RiskSignal]
+    llm_opinion: LlmOpinion | None = None
 
 
 class BatchRow(ClassifyResponse):
@@ -61,6 +79,7 @@ class Meta(BaseModel):
     risk_legit_threshold: float
     max_batch_rows: int
     labels: list[str]
+    llm_review_available: bool
 
 
 @router.get("/meta", response_model=Meta)
@@ -72,12 +91,21 @@ def meta() -> Meta:
         risk_legit_threshold=RISK_LEGIT_THRESHOLD,
         max_batch_rows=MAX_BATCH_ROWS,
         labels=sorted(get_pipeline().named_steps["clf"].classes_),
+        llm_review_available=bool(Config.GROQ_API_KEY),
     )
 
 
 @router.post("/classify", response_model=ClassifyResponse)
 def classify_one(req: ClassifyRequest) -> dict:
-    return classify(get_pipeline(), req.text)
+    result = classify(get_pipeline(), req.text)
+    # only the narrow band where the local model already admits it can't
+    # tell — not every request, and never the batch path (cost + latency).
+    # Config check here too (not just inside groq_second_opinion) so the
+    # feature being off is a true no-op, not a call that immediately bails.
+    risk = result.get("risk")
+    if Config.GROQ_API_KEY and risk is not None and RISK_LEGIT_THRESHOLD < risk < RISK_FRAUD_THRESHOLD:
+        result["llm_opinion"] = groq_second_opinion(req.text)
+    return result
 
 
 @router.post("/classify/batch", response_model=list[BatchRow])

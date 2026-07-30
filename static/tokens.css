@@ -1,4 +1,4 @@
-/* Hallmark · theme: Cobalt · genre: modern-minimal
+/* Design tokens: "Cobalt" theme, modern-minimal genre.
  * paper band: cool light · display style: grotesk-sans · accent hue: electric cobalt
  * Served from /tokens.css so the token block is portable AND actually reachable.
  */
@@ -15,7 +15,7 @@
   --color-ink-3:        oklch(52% 0.014 256);
   --color-graphite-ink: oklch(92% 0.008 250);
   --color-graphite-ink-2: oklch(72% 0.012 253);
-  --color-graphite-ink-3: oklch(56% 0.014 255);
+  --color-graphite-ink-3: oklch(64% 0.014 255);  /* 5.1:1 on graphite — AA for small text */
 
   /* — Rules ————————————————————————————— */
   --color-rule:         oklch(91% 0.006 252);

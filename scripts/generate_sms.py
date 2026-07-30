@@ -9,6 +9,7 @@ Requires `alembic upgrade head` already run against the target DATABASE_URL.
 import argparse
 import os
 import random
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -50,6 +51,9 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "Confirmed. You have paid ${amount} to {name} for {bill}. Balance ${balance}. TxID:{ref}.",
         "Your OTP is {otp}. Do not share this code with anyone. Valid for 5 minutes.",
         "Cashback! Get 5% back on airtime top-ups this week. Dial *151# to top up now.",
+        # genuine airtime transfer to a known recipient — no amplification
+        # promise, the mirror image of the advance-fee USSD scam below
+        "Send ${amount} airtime to your family on {shortphone} using *151*1*1#. Standard network rates apply.",
         "Dear customer, your agent float request of ${amount} has been approved. Ref:{ref}.",
         "Zita renyu {name}, mari yenyu ye ${amount} yatumirwa kuAgent {agent}. TxID:{ref}.",
         "Statement: {count} transactions this month totalling ${amount}. Dial *151*2# for details.",
@@ -89,11 +93,25 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         # as the passive-consent scam above, opposite (safe) control design.
         "{brand}: A request to move your mobile banking to a new device was received. If this was NOT you, call {shortphone} immediately to block it.",
         "{network}: SIM swap requested on your number. If you did not request this, contact customer care now to cancel it before it completes.",
+        # safe device-linking: the not-you branch is ACTIVE (call to cancel),
+        # not silence-by-default — the mirror of the manufactured-trigger scam
+        "{brand}: A device-linking session was opened using your number. If this was not you, call {shortphone} now to cancel it before it completes.",
         # a technician call NOT coupled with an approve/read instruction — so
         # authorization_via_inbound_call must stay silent (the discriminator is
         # the call+approve conjunction, not the word "technician")
         "{network}: our technician will call {date} to schedule your fibre installation. No action needed now.",
         "{bank}: your appointment with an advisor is confirmed for {date}. We will call to confirm the time.",
+        # correctly-designed merchant-payment authorization: PIN entry is
+        # gated on the user's OWN prior action, receiving money is explicitly
+        # exempted, and a safe cancel path is offered — the mirror image of
+        # the reversal-scam PIN demand above.
+        "{brand}: A merchant-payment request for ${amount} was sent to your wallet. Enter your PIN only if you intended to pay that merchant. Receiving a cash-in does not require approval. Cancel the request if you do not recognise it.",
+        "{brand}: Payment request of ${amount} received. This needs your PIN only if you initiated it. Incoming funds never require your PIN. Decline it if unfamiliar.",
+        # correctly-designed beneficiary/payee check: verification happens
+        # INSIDE the real app (nothing sent to the sender), gated on a
+        # reject-on-mismatch default — the mirror image of the payee-swap scam.
+        "{brand}: A beneficiary update was requested on your profile. Verify the beneficiary name and account suffix inside the {brand} app before approving it. Reject the update if any detail differs from the payee you intended to add.",
+        "{brand}: A new payee was added to your account. Check the name and account suffix inside the app before approving. If anything looks wrong, reject it and contact support.",
     ],
     SmsLabel.PHISHING_CREDENTIAL: [
         "URGENT: Your account will be suspended. Verify your PIN now at {url} to avoid suspension.",
@@ -137,6 +155,27 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "{brand}: our agent will call you now. When prompted, tap Approve on the security notification to finish verifying your device. We will not ask for your PIN.",
         "{network}: a technician is calling about your account recovery. Please approve the push notification you receive during the call. No code will be requested.",
         "{brand}: mumiriri wedu achakufona. Paunoona notification, dzvanya Approve kuti tipedze security check. Hatikumbire PIN.",
+        # same passive-consent device-change trick, no call this time — the
+        # "screen"/"notice" is an in-app prompt the victim is coached to accept
+        "{brand}: The handset replacement recorded on your profile is awaiting a routine ownership check. When the security notice appears, choose Recognise device to preserve your current wallet limits. You may disregard this message once the notice clears.",
+        "{brand}: Your handset transfer has reached the final validation stage. When the Device Protection screen appears, select This was me so the existing profile remains active. If no screen appears, no action is needed.",
+        # session-hijack via a real security alert: the alert that would
+        # normally warn the victim about the attacker's new device is
+        # pre-excused as routine "synchronisation" instead of what it is
+        "{brand}: Your replacement SIM is now paired with mobile banking. To keep access on this handset, open the next security alert and select Keep current session. The notice may refer to ending access on another device; this is part of the synchronisation.",
+        "{network}: your SIM swap is syncing with your wallet. Open the account notice and choose Keep this device active. It may mention removing another device — that is expected during the sync.",
+        # beneficiary/payee-swap: the same pre-excuse mechanism, no "screen"/
+        # "alert" vocabulary at all this time — a quoted dialog label plus
+        # "appears" stands in for it, and "being aligned" stands in for
+        # "synchronisation". Goal is redirecting the victim's own payments.
+        "{brand}: The beneficiary update you started has been reconciled with your saved contacts. When Confirm existing payee appears, select CONFIRM to retain scheduled-payment protection. A different account suffix may appear while records are being aligned.",
+        "{brand}: Your saved payee list has been reviewed. When the Confirm payee details prompt shows, tap CONFIRM to keep automatic payments active. Some fields may read differently as your contacts are reconciled.",
+        # manufactured-trigger evasion: mimics the SAFE conditional-self-check
+        # pattern ("if you did this, tap Continue") but the attacker fabricated
+        # the trigger — and "linking" evades the replace/transfer/migrate/swap
+        # vocabulary the device-change detector otherwise relies on.
+        "{brand}: A device-linking session was opened using your number. If you initiated this from a new phone, tap Continue when the prompt appears to finish linking. If you did not initiate this, no action is needed — the session will expire automatically.",
+        "{network}: A SIM-linking request was raised on your line. If this was you setting up a new phone, tap Continue to finish linking. If not, no action is needed — unrecognised requests expire on their own.",
     ],
     SmsLabel.PHISHING_REVERSAL_SCAM: [
         "Sorry, I sent ${amount} to you by mistake. Please reverse it to {shortphone} urgently.",
@@ -155,6 +194,12 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "{brand}: reversal of ${amount} pending on your account. Confirm your PIN to cancel it before it completes.",
         "Alert: ${amount} reversal in progress. To stop it, reply with your PIN now.",
         "{brand}: kudzoserwa kwe ${amount} kuri kuitika. Tumirai PIN yenyu kuti mumise izvi.",
+        # push-payment authorization hijack: a real refund just lands, it never
+        # routes through an accept/release prompt. The pre-excuse for the
+        # screen not matching the story is the tell — no genuine notification
+        # ever needs to explain away its own confirmation screen looking wrong.
+        "{brand}: A ${amount} refund is being returned to your wallet. When the payment request appears in the app, select Accept to release the funds. The screen may display the merchant name rather than refund.",
+        "{brand}: your ${amount} reversal is ready. Accept the request in the app to receive it — it may show as a payment to a merchant instead of a refund, that is normal.",
     ],
     SmsLabel.FAKE_AGENT: [
         "This is Agent {agent} from EcoCash. Send your PIN to process your cash-out of ${amount}.",
@@ -178,6 +223,14 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "Free airtime worth ${amount} waiting for you. Reply YES and send your PIN to claim.",
         "Lucky draw winner! Confirm your details at {url} to receive your ${amount} prize today.",
         "Uwinile! Inombolo yakho iwine ${amount}. Thumela i-PIN yakho ku {shortphone} lamuhla.",
+        # advance-fee airtime/USSD scam: send a small amount, promised a much
+        # bigger amount back. The USSD code isn't the tell — legit airtime/
+        # bill templates use *151# constantly too — it's the code paired
+        # with a promised amplified return.
+        "{network}: Send $2 airtime to {shortphone} using *151*1*1# and receive $10 airtime back instantly! Limited offer today.",
+        "Congratulations! Dial *151*4*{shortphone}*5# to send a small activation fee in airtime and claim your ${amount} {brand} bonus.",
+        "{network}: Double your airtime! Transfer any amount to {shortphone} via *145# and get double back within 5 minutes.",
+        "Chikwata che{network}: Tumirai airtime ku {shortphone} nge*151*1*1# mugogashira zvakapetwa kaviri nekukurumidza.",
     ],
     SmsLabel.OTHER_FRAUD: [
         "For help with your blocked account, call our customer care on {shortphone} now.",
@@ -247,22 +300,77 @@ def _template_values(rng: random.Random) -> dict:
     }
 
 
-def gen_sms_messages(rng: random.Random, count: int) -> list[SmsMessage]:
+# Interchangeable phrasings for the same underlying concept — drawn directly
+# from real evasions caught during development (word-order swaps, vocabulary
+# substitutions that slipped past a fixed feature lexicon: "replacement
+# handset" -> "handset transfer" -> "handset replacement"; "screen"/"prompt"
+# -> "security alert"/"notice"; "may display X rather than Y" -> "may refer
+# to X; this is part of the synchronisation"). Rewriting a template through
+# a random pick from each group broadens lexical coverage per attack IDEA
+# instead of training on one fixed phrasing per idea — the same principle as
+# `obfuscate()` below, but at the phrase level instead of the character level.
+PARAPHRASE_GROUPS: list[list[str]] = [
+    ["no action is needed", "no action needed", "no further action required",
+     "you may disregard this message", "ignore this notice", "no response is needed"],
+    ["replacement handset", "handset replacement", "handset transfer",
+     "device replacement", "device transfer", "handset migration",
+     "device-linking session", "linking session", "device linking"],
+    ["screen", "prompt", "notification", "security alert", "notice", "dialog"],
+    ["rather than", "instead of", "as opposed to"],
+    ["approve", "accept", "confirm", "authorise", "continue"],
+    ["may display", "may show", "may appear as", "might display", "could show"],
+    ["this is part of the synchronisation", "this is part of the process",
+     "this is part of the reconciliation", "this is expected during the update"],
+    ["technician will call", "agent will call", "officer will call",
+     "representative will call", "during our courtesy call", "during the courtesy call"],
+    ["read the code", "read out the code", "tell them the code", "share the code"],
+    ["only if you intended", "only if you initiated", "only if this was you"],
+    ["reject the update if", "decline it if", "cancel it if"],
+    ["being aligned", "being reconciled", "being synchronised", "being updated"],
+    # from the LLM-caught "courtesy call" evasion and the "device-linking"
+    # near-miss (60.02% risk purely by TF-IDF luck, structural detectors silent)
+    ["finish linking", "complete the linking", "finish the linking process"],
+    ["no action is needed — the session will expire automatically",
+     "no action is needed — unrecognised requests expire on their own",
+     "no action is needed — the request will lapse by itself"],
+]
+_PARAPHRASE_PATTERNS = [
+    (re.compile(rf"\b(?:{'|'.join(re.escape(p) for p in sorted(group, key=len, reverse=True))})\b", re.IGNORECASE), group)
+    for group in PARAPHRASE_GROUPS
+]
+
+
+def paraphrase_text(text: str, rng: random.Random) -> str:
+    """Swap each matched phrase for a random ALTERNATE from its group.
+    Case-insensitive; alternates are inserted lowercase, which reads fine
+    mid-sentence in SMS copy (existing templates are inconsistently cased too)."""
+    for pattern, group in _PARAPHRASE_PATTERNS:
+        def _swap(m, group=group):
+            alternatives = [p for p in group if p.lower() != m.group(0).lower()]
+            return rng.choice(alternatives) if alternatives else m.group(0)
+        text = pattern.sub(_swap, text)
+    return text
+
+
+def gen_sms_messages(rng: random.Random, count: int, paraphrase_rate: float = 0.35) -> list[SmsMessage]:
     labels = list(TEMPLATES.keys())
     messages = []
     for _ in range(count):
         label = rng.choice(labels)
         template = rng.choice(TEMPLATES[label])
         text = template.format(**_template_values(rng))
+        if rng.random() < paraphrase_rate:
+            text = paraphrase_text(text, rng)
         messages.append(SmsMessage(text=text, label=label, source="generator"))
     return messages
 
 
-def _write_dataset_card(path: Path, counts: Counter, seed: int) -> None:
+def _write_dataset_card(path: Path, counts: Counter, seed: int, paraphrase_rate: float) -> None:
     lines = [
         "# Smishing SMS Dataset Card",
         "",
-        f"Generated with seed {seed} by `scripts/generate_sms.py`.",
+        f"Generated with seed {seed} by `scripts/generate_sms.py` "
+        f"(paraphrase rate: {paraphrase_rate:.0%}).",
         "",
         "## Composition",
         "",
@@ -279,6 +387,11 @@ def _write_dataset_card(path: Path, counts: Counter, seed: int) -> None:
         "amounts (USD/ZWG), shortcodes, and fake URLs. A subset of templates use "
         "Shona/English and Ndebele/English code-switching, reflecting real "
         "Zimbabwean mobile-money SMS traffic.",
+        "",
+        f"A random {paraphrase_rate:.0%} of rows are additionally rewritten through "
+        "`PARAPHRASE_GROUPS` — interchangeable phrasings (word-order swaps, vocabulary "
+        "substitutions) drawn directly from real evasions found during development, "
+        "so training coverage per attack idea isn't limited to one fixed phrasing.",
         "",
         "## Limitations",
         "",
@@ -301,6 +414,8 @@ def main() -> None:
     parser.add_argument("--count", type=int, default=3000)
     parser.add_argument("--reset", action="store_true", help="Delete existing generator-sourced sms_messages first.")
     parser.add_argument("--dataset-card-out", default="data/sms_dataset_card.md")
+    parser.add_argument("--paraphrase-rate", type=float, default=0.35,
+                         help="fraction of rows rewritten via PARAPHRASE_GROUPS (0 disables).")
     args = parser.parse_args()
 
     rng = random.Random(args.seed)
@@ -310,14 +425,14 @@ def main() -> None:
         db_session.query(SmsMessage).filter(SmsMessage.source == "generator").delete()
         db_session.commit()
 
-    messages = gen_sms_messages(rng, args.count)
+    messages = gen_sms_messages(rng, args.count, paraphrase_rate=args.paraphrase_rate)
     db_session.add_all(messages)
     db_session.commit()
 
     counts = Counter(m.label.value for m in messages)
     out_path = Path(args.dataset_card_out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    _write_dataset_card(out_path, counts, args.seed)
+    _write_dataset_card(out_path, counts, args.seed, args.paraphrase_rate)
 
     print(f"generated {len(messages)} sms messages -> dataset card: {out_path}")
     for label, n in sorted(counts.items()):

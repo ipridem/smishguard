@@ -118,6 +118,55 @@ def test_passive_consent_device_change_detected():
     assert ordinary["passive_consent_device_change"] == 0.0
 
 
+def test_passive_consent_device_change_survives_word_order_paraphrase():
+    """A literal phrase list loses this: 'replacement handset' -> 'handset
+    transfer' -> 'handset replacement' is the same two words in three orders.
+    Detection has to be proximity-based, not phrase-based, to survive it."""
+    for paraphrase in [
+        'FinGuard: Your handset transfer has reached the final validation stage. '
+        'When the Device Protection screen appears, select "This was me" so the '
+        'existing profile remains active. If no screen appears, no action is needed.',
+
+        'FinGuard: The handset replacement recorded on your profile is awaiting a '
+        'routine ownership check. When the security notice appears, choose '
+        '"Recognise device" to preserve your current wallet limits. You may '
+        'disregard this message once the notice clears.',
+    ]:
+        assert _feature_dict(paraphrase)["passive_consent_device_change"] == 1.0, paraphrase
+
+    # the noun+verb proximity check must not fire without a passive-consent
+    # phrase alongside it — device-change vocabulary alone is not the signal
+    for benign in [
+        "Your profile picture has been changed successfully.",
+        "Your new device has been linked to your WiFi network.",
+    ]:
+        assert _feature_dict(benign)["passive_consent_device_change"] == 0.0, benign
+
+
+def test_passive_consent_device_change_covers_linking_vocabulary():
+    """'Linking' is a fourth paraphrase of the same device-change concept.
+    Scored 0.6002 risk before this fix — a hair over the fraud threshold by
+    TF-IDF luck alone, with every structural signal reading 'not found'.
+    NOT a bare 'link' verb stem: that collides with the ordinary 'click this
+    link' (a URL reference) and produced real false positives in testing."""
+    attack = _feature_dict(
+        'EcoCash: A device-linking session was opened using your number. If you '
+        'initiated this from a new phone, tap "Continue" when the prompt appears '
+        "to finish linking. If you did not initiate this, no action is needed "
+        "— the session will expire automatically."
+    )
+    assert attack["passive_consent_device_change"] == 1.0
+
+    for benign in [
+        "Download the app using this link. Update your device settings anytime, "
+        "no action needed right now.",
+        "Use this link to view your device warranty. No action is needed to "
+        "keep your warranty active.",
+        "Your device has been linked to your account successfully.",
+    ]:
+        assert _feature_dict(benign)["passive_consent_device_change"] == 0.0, benign
+
+
 def test_authorization_via_inbound_call():
     """MFA-push / consent-phishing: primed inbound call + an instruction to
     approve a prompt or read a code. Neither half is suspicious alone; the
@@ -139,6 +188,141 @@ def test_authorization_via_inbound_call():
         "Approve the payment in your app to complete checkout.",   # approve, but no inbound call
     ]:
         assert _feature_dict(benign)["authorization_via_inbound_call"] == 0.0, benign
+
+
+def test_conditional_self_initiated_pin_entry_not_flagged():
+    """A merchant-payment authorization is legitimately gated on the user's OWN
+    prior action ('enter your PIN only if YOU intended to pay') — the mirror
+    image of a scam, which demands unconditionally or gates on the NEGATIVE
+    case ('if this was NOT you, send your PIN'). Both shapes must stay
+    distinguishable — this isn't a blanket 'if' suppressor."""
+    legit = _feature_dict(
+        "FinGuard: A merchant-payment request for USD 72.00 was sent to your wallet. "
+        "Enter your PIN only if you intended to pay that merchant. Receiving a cash-in "
+        "does not require approval. Cancel the request if you do not recognise it."
+    )
+    assert legit["requests_sensitive_credentials"] == 0.0
+
+    # the negative-case scam framing must still fire — "not" breaks the
+    # self-referential phrase match, by design
+    scam = _feature_dict("Your OTP 483920 was requested. If this was not you, reply with your PIN to cancel now.")
+    assert scam["requests_sensitive_credentials"] == 1.0
+
+    # an unconditional demand elsewhere must still fire regardless
+    plain_demand = _feature_dict("Send your PIN to 12345 immediately to unlock your wallet")
+    assert plain_demand["requests_sensitive_credentials"] == 1.0
+
+
+def test_screen_mismatch_coaching():
+    """Push-payment authorization hijack: a refund story sets up an in-app
+    Accept prompt, then pre-excuses the prompt not matching the story. A real
+    refund just lands — it never needs its own confirmation screen explained
+    away in advance."""
+    attacks = [
+        'A USD 46.20 refund is being returned to your wallet. When the payment '
+        'request appears in the app, select "Accept" to release the funds. '
+        'The screen may display the merchant name rather than "refund."',
+
+        "Your reversal is ready. Accept the request in the app to receive it "
+        "— it may show as a payment to a merchant instead of a refund, that is normal.",
+    ]
+    for a in attacks:
+        assert _feature_dict(a)["screen_mismatch_coaching"] == 1.0, a
+
+    for benign in [
+        "When the Device Protection screen appears, tap Recognise device.",
+        "A USD 46.20 refund has been credited to your wallet. New balance USD 120.00.",
+        "Please email us rather than calling, our lines are busy today.",
+    ]:
+        assert _feature_dict(benign)["screen_mismatch_coaching"] == 0.0, benign
+
+
+def test_screen_mismatch_coaching_survives_alert_notice_paraphrase():
+    """Same pre-excuse mechanism, different vocabulary: 'security alert'/
+    'notice' instead of 'screen'/'prompt', and 'may refer to... this is part
+    of the synchronisation' instead of 'may display... rather than'."""
+    attack = _feature_dict(
+        'FinGuard: Your replacement SIM is now paired with mobile banking. To keep '
+        'access on this handset, open the next security alert and select "Keep '
+        'current session." The notice may refer to ending access on another '
+        "device; this is part of the synchronisation."
+    )
+    assert attack["screen_mismatch_coaching"] == 1.0
+    assert attack["passive_consent_device_change"] == 0.0   # active ask, not silence-as-default
+
+    for benign in [
+        "Notice: this is part of our routine system maintenance tonight. No action needed.",
+        "Security alert: your account was accessed from a new location.",
+    ]:
+        assert _feature_dict(benign)["screen_mismatch_coaching"] == 0.0, benign
+
+
+def test_screen_mismatch_coaching_is_structural_not_phrase_based():
+    """A third paraphrase in a row for this feature: no 'screen'/'prompt'/
+    'alert'/'notice' word at all — just a quoted dialog label + 'appears',
+    and 'may appear... being aligned' instead of 'may display... rather
+    than'. Detection has to key on the SHAPE (a quoted label followed by
+    'appears'; a modal-prediction verb; a background-process excuse), not
+    another fixed phrase, or this becomes an endless list."""
+    attack = _feature_dict(
+        'FinGuard: The beneficiary update you started has been reconciled with your '
+        'saved contacts. When "Confirm existing payee" appears, select CONFIRM to '
+        "retain scheduled-payment protection. A different account suffix may appear "
+        "while records are being aligned."
+    )
+    assert attack["screen_mismatch_coaching"] == 1.0
+
+    for benign in [
+        'Welcome to "EcoCash Plus" rewards program!',
+        "Your bill amount may vary slightly due to taxes.",
+    ]:
+        assert _feature_dict(benign)["screen_mismatch_coaching"] == 0.0, benign
+
+
+def test_ussd_advance_fee_offer():
+    """Classic advance-fee trick: send airtime via a USSD code, get back more
+    than you sent. The USSD code alone can't be the signal — legit airtime/
+    bill templates use *151# constantly — it's the code paired with a promise
+    of amplified return AND (for the generic 'get back' phrasing) a send/
+    transfer verb, since a legit cashback offer says 'get back' too, just
+    without ever asking you to send anything to anyone first."""
+    attacks = [
+        "Econet: Send $2 airtime to 0771234567 using *151*1*1# and receive $10 "
+        "airtime back instantly! Limited offer today.",
+        "Congratulations! Dial *151*4*0771234567*5# to send a small activation "
+        "fee in airtime and claim your $100 EcoCash bonus.",
+        "NetOne: Double your airtime! Transfer any amount to 0778889900 via "
+        "*145# and get double back within 5 minutes.",
+    ]
+    for a in attacks:
+        assert _feature_dict(a)["ussd_advance_fee_offer"] == 1.0, a
+
+    for benign in [
+        "Cashback! Get 5% back on airtime top-ups this week. Dial *151# to top up now.",
+        "Reminder: your bill of $45.00 for DStv is due tomorrow. Pay via *151#.",
+        "Statement: 12 transactions this month totalling $230.00. Dial *151*2# for details.",
+        "Send $5 airtime to your child on 0771234567 using *151*1*1#. Standard network rates apply.",
+    ]:
+        assert _feature_dict(benign)["ussd_advance_fee_offer"] == 0.0, benign
+
+
+def test_conditional_verify_inside_app_not_flagged():
+    """A genuine beneficiary/payee check happens INSIDE the real app with an
+    explicit reject-on-mismatch default — the user checking their own screen,
+    not disclosing anything to whoever sent the SMS. That's a different shape
+    from 'verify your account by clicking/replying/calling', which hands
+    control to the sender."""
+    legit = _feature_dict(
+        "FinGuard: A beneficiary update was requested on your profile. Verify the "
+        "beneficiary name and account suffix inside the FinGuard app before "
+        "approving it. Reject the update if any detail differs from the payee "
+        "you intended to add."
+    )
+    assert legit["requests_identity_verification"] == 0.0
+
+    # a real verify-phishing demand must still fire
+    scam = _feature_dict("Verify your account now at http://fake-verify.tk/x to avoid suspension.")
+    assert scam["requests_identity_verification"] == 1.0
 
 
 def test_unofficial_domain_alone_is_not_enough_to_call_it_deceptive():

@@ -1,6 +1,8 @@
 """JSON API surface: single classify, CSV batch, meta, and input validation."""
 import io
 
+from app import api
+
 
 def test_classify_returns_label_and_explainability(client):
     resp = client.post("/api/classify", json={"text": "URGENT verify your PIN now"})
@@ -51,7 +53,57 @@ def test_batch_rejects_non_csv(client):
     assert resp.status_code == 400
 
 
-def test_meta_exposes_threshold_and_labels(client):
+def test_meta_exposes_threshold_and_labels(client, monkeypatch):
+    monkeypatch.setattr(api.Config, "GROQ_API_KEY", None)   # isolate from a real .env
     body = client.get("/api/meta").json()
     assert 0 < body["low_confidence_threshold"] < 1
     assert "legit" in body["labels"]
+    assert body["llm_review_available"] is False
+
+
+def test_llm_opinion_absent_without_a_configured_key(client, monkeypatch):
+    """No GROQ_API_KEY -> llm_opinion must stay null even when risk is
+    inconclusive, and groq_second_opinion must not even be attempted."""
+    monkeypatch.setattr(api.Config, "GROQ_API_KEY", None)   # isolate from a real .env
+    monkeypatch.setattr(api, "classify", lambda pipeline, text: {
+        "label": "legit", "confidence": 0.5, "risk": 0.5, "top_tokens": [], "risk_signals": [],
+    })
+
+    def fail_if_called(text):
+        raise AssertionError("groq_second_opinion should not be called without an API key")
+
+    monkeypatch.setattr(api, "groq_second_opinion", fail_if_called)
+    body = client.post("/api/classify", json={"text": "anything"}).json()
+    assert body["llm_opinion"] is None
+
+
+def test_llm_opinion_only_attached_in_the_inconclusive_band(client, monkeypatch):
+    monkeypatch.setattr(api.Config, "GROQ_API_KEY", "test-key")
+    canned = {"verdict": "fraud", "confidence": 0.7, "reasoning": "coaches an out-of-band approval"}
+    monkeypatch.setattr(api, "groq_second_opinion", lambda text: canned)
+
+    # inconclusive risk -> attached
+    monkeypatch.setattr(api, "classify", lambda pipeline, text: {
+        "label": "legit", "confidence": 0.5, "risk": 0.5, "top_tokens": [], "risk_signals": [],
+    })
+    assert client.post("/api/classify", json={"text": "x"}).json()["llm_opinion"] == canned
+
+    # decisive risk -> not attached, even though a key is configured
+    monkeypatch.setattr(api, "classify", lambda pipeline, text: {
+        "label": "phishing_credential", "confidence": 0.95, "risk": 0.95, "top_tokens": [], "risk_signals": [],
+    })
+    assert client.post("/api/classify", json={"text": "x"}).json()["llm_opinion"] is None
+
+
+def test_llm_opinion_never_attached_on_batch(client, monkeypatch):
+    """Cost/latency bound: the LLM leg is single-message only."""
+    monkeypatch.setattr(api.Config, "GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(api, "groq_second_opinion", lambda text: {
+        "verdict": "fraud", "confidence": 0.7, "reasoning": "x",
+    })
+    csv_bytes = b"Send your PIN to 12345 immediately\n"
+    rows = client.post(
+        "/api/classify/batch",
+        files={"file": ("batch.csv", io.BytesIO(csv_bytes), "text/csv")},
+    ).json()
+    assert all(r.get("llm_opinion") is None for r in rows)

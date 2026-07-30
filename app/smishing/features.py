@@ -70,7 +70,26 @@ PERSONAL_ID_WORDS = ["id number", "national id", "identity number", "copy of you
 # PIN") mention the same keywords as an actual request does; a plain
 # substring match can't tell them apart, so keyword hits are only counted in
 # sentences that don't also contain a negation word
-NEGATION_WORDS = ["never", "won't", "will not", "don't", "do not", "cannot", "can't", "not ask"]
+NEGATION_WORDS = [
+    "never", "won't", "will not", "don't", "do not", "cannot", "can't", "not ask",
+    # a genuine merchant-payment authorization is gated on the user's OWN
+    # prior action ("enter your PIN only if YOU intended to pay") — the
+    # opposite shape of a scam, which asks unconditionally or gates on the
+    # NEGATIVE case ("if this was NOT you, send your PIN"). Deliberately
+    # narrow to self-referential confirmation phrasing, not a bare "if",
+    # which a scam could otherwise wrap around any demand to fake safety.
+    "only if you intended", "if you intended to", "if you initiated",
+    "if this was you", "if you made this request", "if you requested this",
+    "does not require approval", "does not require your pin",
+    # a genuine beneficiary/payee check happens INSIDE the real app, with an
+    # explicit reject-on-mismatch default — "verify X inside the app before
+    # approving it" is the user checking their own screen, not disclosing
+    # anything to the sender. That's structurally different from "verify your
+    # account [by clicking/replying/calling]", which hands control to whoever
+    # sent the message.
+    "before approving", "before you approve", "reject the update if",
+    "reject if any detail",
+]
 # "pin"/"otp"/"password"/"id number" are neutral NOUNS — they appear in real
 # notifications ("your OTP is 123456", "your password was changed") exactly as
 # often as in scams. The noun only signals a request when an imperative aimed
@@ -112,13 +131,39 @@ SUFFIX_LABELS = {
 # engineering pattern; it carries no PIN/URL/currency ask, so every other
 # signal in this file is blind to it.
 DEVICE_CHANGE_PHRASES = [
-    "replacement handset", "new device", "new sim", "sim swap", "sim card",
+    "new device", "new sim", "sim swap", "sim card",
     "move mobile banking", "move your mobile banking", "change your registered number",
-    "transfer your line", "link a new device", "port your number",
+    "link a new device", "port your number",
+    # compound-phrase forms of "linking" — deliberately NOT a bare "link"
+    # verb stem in the proximity regex below, which collides with the
+    # ordinary "click this link" (a URL) and produced real false positives
+    "device-linking", "device linking", "linking session", "linking your sim",
+    "linking your device", "finish linking", "device link",
 ]
+# a literal phrase list loses this: "replacement handset" -> "handset transfer"
+# -> "handset replacement" is the same two words in three orders. Proximity,
+# not phrase, is what's stable — a change-noun and a change-verb within a few
+# words of each other, in either order.
+_DEVICE_CHANGE_NOUNS = r"handset|device|sim|profile|line"
+# NOT "link\w*" here: unlike replace/transfer/migrate/swap/port, "link" collides
+# with the ordinary "click this link" (a URL), which produced real false
+# positives in testing ("update your device settings... this link... no action
+# needed"). The linking-specific evasion is instead covered by exact compound
+# phrases below (DEVICE_CHANGE_PHRASES), which don't fire on a bare URL mention.
+_DEVICE_CHANGE_VERBS = r"replac\w*|transfer\w*|migrat\w*|swap\w*|port\w*"
+DEVICE_CHANGE_PROXIMITY_RE = re.compile(
+    rf"\b(?:{_DEVICE_CHANGE_NOUNS})\b(?:\W+\w+){{0,3}}\W+\b(?:{_DEVICE_CHANGE_VERBS})\b"
+    rf"|\b(?:{_DEVICE_CHANGE_VERBS})\b(?:\W+\w+){{0,3}}\W+\b(?:{_DEVICE_CHANGE_NOUNS})\b",
+    re.IGNORECASE,
+)
 PASSIVE_CONSENT_PHRASES = [
     "no response is needed", "no response needed", "no action is needed",
-    "no action needed", "no further action",
+    "no action needed", "no further action", "no need to respond",
+    "no need to reply", "nothing further is required",
+    # "disregard/ignore this X" is the same silence-is-default framing as
+    # "no action needed", just phrased as an instruction rather than a status
+    "you may disregard", "disregard this message", "disregard this notice",
+    "ignore this message", "ignore this notice",
 ]
 # presence of any of these on the "if this wasn't you" branch means the
 # message DOES ask for action to stop the change — the safe design
@@ -148,6 +193,64 @@ APPROVAL_CUES = [
     "repeat the security", "share the code", "provide the code",
     "tell them the", "dictate", "verengai",
 ]
+# in-app payment-authorization hijack: a "refund"/"reversal" story sets up an
+# in-app prompt the victim is told to accept — but a real mobile-money refund
+# never routes through an "accept/release" confirmation at all, it just
+# lands. The near-unfakeable tell is the message PRE-EXCUSING a mismatch
+# between its own story and what the actual authorization screen will show
+# ("may display the merchant name rather than 'refund'") — no legitimate
+# notification ever needs to explain away its own prompt looking wrong,
+# because a legitimate one doesn't look wrong.
+SCREEN_PROMPT_WORDS = [
+    "screen", "prompt", "notification", "pop-up", "popup", "in the app",
+    "security alert", "alert", "notice",
+]
+# A quoted button/dialog label immediately followed by "appears" IS a prompt
+# reference, regardless of whether the message ever says "screen"/"prompt" —
+# this is the second time a scam evaded SCREEN_PROMPT_WORDS by vocabulary
+# alone, so this one's structural: quote-mark + short phrase + "appears".
+QUOTED_APPEARS_RE = re.compile(r"[\"“‘'][^\"”’']{2,50}[\"”’']\s*appears", re.IGNORECASE)
+SCREEN_MISMATCH_CUES = [
+    "rather than", "instead of", "even if it shows", "even if it says",
+    "regardless of what", "not match", "different from what",
+]
+# Structural, not phrase-based, for the same reason: "may appear/show/display/
+# refer/mention/read/list X" is the mismatch PREDICTION, in any wording.
+MISMATCH_PREDICTION_RE = re.compile(
+    r"\b(?:may|might|could)\b(?:\s+\w+){0,2}\s+"
+    r"(?:appear|show|display|read|list|reflect|refer|mention|say)\b",
+    re.IGNORECASE,
+)
+# "this is normal/expected/part of X" excuses the mismatch instead of naming
+# it outright — same pre-excusing move, softer phrasing. "aligned"/"reconciled"
+# generalizes "synchronisation" to any word implying background record-matching.
+EXPLAIN_AWAY_RE = re.compile(
+    r"\b(?:this|that|it)\s+is\s+(?:normal|expected|fine|routine|standard)\b"
+    r"|\bpart of (?:the|our|a)\b(?:\s+\w+){0,2}\s+"
+    r"(?:synchroni[sz]ation|sync|process|upgrade|update|verification|alignment|reconciliation)\b"
+    r"|\b(?:being|are being)\s+(?:aligned|reconciled|synchroni[sz]ed|updated|verified)\b",
+    re.IGNORECASE,
+)
+# Advance-fee airtime/USSD scam: "send airtime via *151*1*1# and get DOUBLE
+# back" — a classic advance-fee trick, common across Zimbabwe and the region.
+# Legit airtime-transfer templates ("Pay via *151#", "top up via *151#") use
+# the same USSD-code shape constantly, so the code alone can't be the signal
+# — it's the code PAIRED with a promise of getting back more than you send.
+USSD_CODE_RE = re.compile(r"\*\d[\d*]{2,}#")
+AMPLIFICATION_WORDS = [
+    "double your airtime", "double your money", "get double", "receive double",
+    "double back", "double it back", "get more back", "receive more back",
+    "x2 your airtime", "instant bonus", "activation fee", "processing fee to claim",
+    "small fee to release", "send to receive more",
+]
+# structural backstop: "receive/get [anything] back" catches phrasings the
+# literal list above doesn't ("receive $10 airtime back instantly") without
+# needing "double"/"bonus" specifically named. But a legit cashback offer
+# ("Get 5% back on airtime top-ups, dial *151#") matches this shape too — the
+# scam-specific part is sending the airtime to someone ELSE first, so this
+# backstop only counts alongside an explicit send/transfer verb.
+AMPLIFICATION_RECEIVE_BACK_RE = re.compile(r"\b(?:receive|get)\b(?:\s+\S+){0,3}\s+back\b", re.IGNORECASE)
+SEND_TRANSFER_RE = re.compile(r"\b(?:send|transfer|forward)\b", re.IGNORECASE)
 SHORTENER_DOMAINS = {
     "bit.ly", "tinyurl.com", "cutt.ly", "is.gd", "t.co", "goo.gl",
     "rb.gy", "tiny.cc", "rebrand.ly",
@@ -179,6 +282,9 @@ PASSIVE_CONSENT_LEX = _lexicon(PASSIVE_CONSENT_PHRASES)
 STOP_CUE_LEX = _lexicon(STOP_CUES)
 CALL_PRIMING_LEX = _lexicon(CALL_PRIMING_PHRASES)
 APPROVAL_LEX = _lexicon(APPROVAL_CUES)
+AMPLIFICATION_LEX = _lexicon(AMPLIFICATION_WORDS)
+SCREEN_PROMPT_LEX = _lexicon(SCREEN_PROMPT_WORDS)
+SCREEN_MISMATCH_LEX = _lexicon(SCREEN_MISMATCH_CUES)
 
 FEATURE_NAMES = [
     "has_shortcode", "has_full_number", "has_url", "has_currency_amount",
@@ -186,7 +292,8 @@ FEATURE_NAMES = [
     "has_shortener_url", "has_unofficial_url", "brand_lookalike_domain",
     "requests_identity_verification", "requests_personal_id",
     "deceptive_subdomain", "passive_consent_device_change",
-    "authorization_via_inbound_call",
+    "authorization_via_inbound_call", "screen_mismatch_coaching",
+    "ussd_advance_fee_offer",
 ]
 
 
@@ -210,7 +317,7 @@ def _is_deceptive_host(host: str) -> bool:
 
 def _is_passive_consent_device_change(lower_text: str) -> bool:
     return bool(
-        DEVICE_CHANGE_LEX.search(lower_text)
+        (DEVICE_CHANGE_LEX.search(lower_text) or DEVICE_CHANGE_PROXIMITY_RE.search(lower_text))
         and PASSIVE_CONSENT_LEX.search(lower_text)
         and not STOP_CUE_LEX.search(lower_text)
     )
@@ -218,6 +325,27 @@ def _is_passive_consent_device_change(lower_text: str) -> bool:
 
 def _is_authorization_via_inbound_call(lower_text: str) -> bool:
     return bool(CALL_PRIMING_LEX.search(lower_text) and APPROVAL_LEX.search(lower_text))
+
+
+def _is_ussd_advance_fee_offer(text: str, lower_text: str) -> bool:
+    if not USSD_CODE_RE.search(text):
+        return False
+    if AMPLIFICATION_LEX.search(lower_text):
+        return True
+    # the generic "get/receive ... back" backstop needs a send/transfer verb
+    # alongside it — a legit cashback offer says "get back" without ever
+    # asking you to send anything to anyone first
+    return bool(AMPLIFICATION_RECEIVE_BACK_RE.search(lower_text) and SEND_TRANSFER_RE.search(lower_text))
+
+
+def _is_screen_mismatch_coaching(lower_text: str) -> bool:
+    has_prompt_ref = bool(SCREEN_PROMPT_LEX.search(lower_text) or QUOTED_APPEARS_RE.search(lower_text))
+    has_mismatch = bool(
+        SCREEN_MISMATCH_LEX.search(lower_text)
+        or MISMATCH_PREDICTION_RE.search(lower_text)
+        or EXPLAIN_AWAY_RE.search(lower_text)
+    )
+    return has_prompt_ref and has_mismatch
 
 
 def _has_shortcode(text: str) -> bool:
@@ -313,6 +441,8 @@ def extract_features(text: str) -> list[float]:
         float(any(_is_deceptive_host(d) for d in unofficial)),
         float(_is_passive_consent_device_change(lower)),
         float(_is_authorization_via_inbound_call(lower)),
+        float(_is_screen_mismatch_coaching(lower)),
+        float(_is_ussd_advance_fee_offer(text, lower)),
     ]
 
 

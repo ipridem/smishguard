@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>FinGuard — SMS smishing classifier</title>
-  <meta name="description" content="Classify an SMS as legitimate or one of five fraud patterns, with the full risk-signal readout behind the verdict.">
+  <meta name="description" content="Classify an SMS as legitimate or one of six fraud categories, with the full risk-signal readout behind the verdict.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
   <div class="shell header__grid">
     <h1>Classify an SMS.<br>See the reasoning.</h1>
     <p class="header__lede">
-      Paste a message and get one of six labels, a confidence score, and every risk signal
+      Paste a message and get a risk score, its closest label, and every risk signal
       the model checked — <strong>including the ones it didn&rsquo;t find</strong>. Trained on
       Zimbabwean mobile-money, SIM-registration and delivery-scam patterns.
     </p>
@@ -50,7 +50,11 @@
         </label>
         <div class="bench__actions">
           <button class="btn" id="single-submit" type="submit">Classify</button>
-          <p class="hint" id="single-hint">Nothing is stored. The message is scored in-process and discarded.</p>
+          <p class="hint" id="single-hint">
+            Nothing is stored — scored in-process and discarded.
+            <span id="llm-disclosure" hidden>If the local model is unsure, the message
+              text is also sent to Groq's API for a second opinion.</span>
+          </p>
         </div>
       </form>
     </section>
@@ -72,8 +76,12 @@
   </div>
 </main>
 
-<section class="results" id="results" aria-live="polite">
+<section class="results" id="results">
   <div class="shell">
+
+    <!-- concise SR announcement: the full readout re-rendering would be a firehose -->
+    <p id="a11y-status" class="visually-hidden" role="status" aria-live="polite"></p>
+
 
     <!-- Empty state: name what the model checks, so the panel is never a void -->
     <div id="state-empty">
@@ -101,6 +109,7 @@
       </div>
 
       <div id="uncertain-note"></div>
+      <div id="llm-opinion"></div>
 
       <div class="readout">
         <div class="readout__col">
@@ -149,7 +158,7 @@
 <footer class="footer">
   <div class="shell footer__inner">
     <span><b>FinGuard</b> — smishing classifier, Zimbabwe mobile-money context.</span>
-    <span>Logistic regression · TF-IDF + 12 engineered signals</span>
+    <span>Logistic regression · TF-IDF + 15 engineered signals</span>
   </div>
 </footer>
 

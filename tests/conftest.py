@@ -41,9 +41,9 @@ def client(tmp_path, monkeypatch):
     model_path = tmp_path / "model.joblib"
     joblib.dump(pipeline, model_path)
 
-    api.get_pipeline.cache_clear()
     monkeypatch.setattr(api.Config, "SMISHING_MODEL_PATH", str(model_path))
+    monkeypatch.setattr(api, "_pipeline", None)
+    monkeypatch.setattr(api, "_pipeline_mtime", None)
     from app.main import app
 
     yield TestClient(app)
-    api.get_pipeline.cache_clear()
