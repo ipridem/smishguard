@@ -1,1 +1,1 @@
-"""FinGuard smishing classifier. App entrypoint lives in app.main."""
+"""SmishGuard smishing classifier. App entrypoint lives in app.main."""

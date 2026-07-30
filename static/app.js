@@ -1,4 +1,4 @@
-/* FinGuard smishing classifier — UI layer over the JSON API.
+/* SmishGuard smishing classifier — UI layer over the JSON API.
  *
  * Every value that originates from an SMS is written with textContent, never
  * innerHTML: the input to this tool is by definition attacker-authored text.

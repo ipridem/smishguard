@@ -13,7 +13,7 @@ from app.api import router
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 app = FastAPI(
-    title="FinGuard Smishing Classifier",
+    title="SmishGuard",
     description="Classifies SMS messages as legitimate or one of five fraud categories, "
                 "with per-feature explainability. Zimbabwe mobile-money context.",
 )
