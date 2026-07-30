@@ -133,3 +133,7 @@ needed — [cloudflare.com/products/tunnel](https://www.cloudflare.com/products/
 guards for every fix made during adversarial testing), the API surface, the
 LLM integration (mocked — no real network calls in tests), and the dataset
 generator.
+
+## License
+
+[MIT](LICENSE)
