@@ -18,8 +18,9 @@ const LABELS = {
 const $ = (id) => document.getElementById(id);
 const meta = {
   low_confidence_threshold: 0.6,
-  risk_fraud_threshold: 0.6,
+  risk_fraud_threshold: 0.5,
   risk_legit_threshold: 0.4,
+  risk_block_threshold: 0.8,
   max_batch_rows: 500,
 };
 
@@ -128,9 +129,17 @@ $("single-form").addEventListener("submit", async (event) => {
 
 /* Risk (P of any fraud class) is the headline — a scam that splits its mass
  * across several fraud classes has low argmax confidence but high risk, and a
- * security tool must not read as unsure in that case. */
+ * security tool must not read as unsure in that case. `risk` alone gates
+ * this verdict; `confidence` (the class argmax) never does — see
+ * renderUncertainty, which surfaces it as a separate, non-overriding note.
+ *
+ * Two bands above the legit line, not one: "block" (>=0.8) is reserved for
+ * risk the model is genuinely confident about, so it doesn't read with the
+ * same urgency as a message that only just crossed the 0.5 F1-optimal
+ * cutoff into "warn". */
 function riskVerdict(risk) {
   if (risk == null) return { text: "Unscored", severity: "warn" };
+  if (risk >= meta.risk_block_threshold) return { text: "High-confidence fraud", severity: "danger" };
   if (risk >= meta.risk_fraud_threshold) return { text: "Likely fraud", severity: "danger" };
   if (risk <= meta.risk_legit_threshold) return { text: "Likely legitimate", severity: "safe" };
   return { text: "Inconclusive", severity: "warn" };

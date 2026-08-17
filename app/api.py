@@ -16,10 +16,27 @@ MAX_BATCH_ROWS = 500
 # Bands on `risk` (= P(any fraud class)), NOT on the 6-class argmax. Argmax
 # confidence collapses when a scam splits its mass across several fraud
 # classes, which is exactly when a security tool must not sound unsure.
-RISK_FRAUD_THRESHOLD = 0.6    # at or above: call it fraud
+# `risk` is what gates the verdict shown to the user; `confidence` (the
+# class argmax) is informational only, surfaced separately in the UI as a
+# note on which fraud category was matched — never used to override risk.
+#
+# Three bands, not one verdict: adversarial-suite risk distributions still
+# overlap (genuine up to 0.84, smish down to 0.62 on the current model), so
+# no single cutoff cleanly separates them. 0.5 remains the F1 optimum
+# (measured via scripts/eval_adversarial.py's threshold sweep, both before
+# and after retraining) and is kept as the legit/warn boundary; 0.8 adds a
+# second, higher-confidence "block" tier so a 0.55-risk message doesn't read
+# with the same urgency as a 0.98 one.
 RISK_LEGIT_THRESHOLD = 0.4    # at or below: call it legitimate
-# between the two the model genuinely can't tell — that's when to warn
+RISK_FRAUD_THRESHOLD = 0.5    # at or above: warn — F1-optimal cutoff
+RISK_BLOCK_THRESHOLD = 0.8    # at or above: block — high-confidence fraud
 LOW_CONFIDENCE_THRESHOLD = 0.6  # applies to the *class* label only
+# LLM second opinion band: wider than the legit/warn boundary on purpose.
+# The population a linear model genuinely can't resolve (real vs. trap
+# messages sitting a few points apart in risk) extends past 0.5 up toward
+# where the "block" tier starts, not just the narrow strip around it.
+LLM_REVIEW_RISK_LOW = 0.4
+LLM_REVIEW_RISK_HIGH = 0.7
 
 # uvicorn --reload watches .py files, not the .joblib artifact — a
 # `scripts/train_model.py` run while the server is up would otherwise serve
@@ -77,6 +94,7 @@ class Meta(BaseModel):
     low_confidence_threshold: float
     risk_fraud_threshold: float
     risk_legit_threshold: float
+    risk_block_threshold: float
     max_batch_rows: int
     labels: list[str]
     llm_review_available: bool
@@ -89,6 +107,7 @@ def meta() -> Meta:
         low_confidence_threshold=LOW_CONFIDENCE_THRESHOLD,
         risk_fraud_threshold=RISK_FRAUD_THRESHOLD,
         risk_legit_threshold=RISK_LEGIT_THRESHOLD,
+        risk_block_threshold=RISK_BLOCK_THRESHOLD,
         max_batch_rows=MAX_BATCH_ROWS,
         labels=sorted(get_pipeline().named_steps["clf"].classes_),
         llm_review_available=bool(Config.GROQ_API_KEY),
@@ -103,7 +122,7 @@ def classify_one(req: ClassifyRequest) -> dict:
     # Config check here too (not just inside groq_second_opinion) so the
     # feature being off is a true no-op, not a call that immediately bails.
     risk = result.get("risk")
-    if Config.GROQ_API_KEY and risk is not None and RISK_LEGIT_THRESHOLD < risk < RISK_FRAUD_THRESHOLD:
+    if Config.GROQ_API_KEY and risk is not None and LLM_REVIEW_RISK_LOW < risk < LLM_REVIEW_RISK_HIGH:
         result["llm_opinion"] = groq_second_opinion(req.text)
     return result
 
