@@ -8,8 +8,27 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from app.smishing.normalize import canonicalise
+from app.smishing.psl_suffixes import PUBLIC_SUFFIXES
 
-URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
+# Scheme-less bare domains ("ecocash-help.net/unlock") have no "https://" or
+# "www." for the old URL_RE to anchor on, so five URL-derived features silently
+# zeroed on them. Anchor the scheme-less alternative on a real public suffix
+# instead of "any dot" — otherwise "arrive 15 min early.Please" manufactures a
+# URL out of a missing space. Suffixes sorted longest-first so a compound
+# suffix like "co.zw" wins over a bare "zw" it also contains.
+_SUFFIX_ALT = "|".join(
+    re.escape(s) for s in sorted(PUBLIC_SUFFIXES, key=len, reverse=True)
+)
+_DOMAIN_LABEL = r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+# negative lookbehind excludes "@" so an email address's domain
+# ("payroll@company.co.zw") isn't mistaken for a link
+BARE_DOMAIN_RE = re.compile(
+    rf"(?<![\w.@-])(?:{_DOMAIN_LABEL}\.)+(?:{_SUFFIX_ALT})(?![a-zA-Z0-9-])(?:/\S*)?",
+    re.IGNORECASE,
+)
+URL_RE = re.compile(
+    rf"https?://\S+|www\.\S+|{BARE_DOMAIN_RE.pattern}", re.IGNORECASE
+)
 # 3-5 bare digits, but never a calendar year — "changed on 29 Jul 2026" is a
 # timestamp, not an SMS short code
 SHORTCODE_RE = re.compile(r"(?<!\d)(?!(?:19|20)\d\d(?!\d))\d{3,5}(?!\d)")
@@ -121,10 +140,9 @@ OFFICIAL_DOMAINS = {
 # reads as zimpay.co.zw at a glance. Brand-agnostic on purpose — BRAND_NAMES
 # only catches impersonations of brands we happened to list, which is exactly
 # how a lookalike for an unlisted brand slips through.
-SUFFIX_LABELS = {
-    "co", "com", "org", "net", "gov", "edu", "ac", "info", "biz",
-    "zw", "za", "ke", "ng", "uk",
-}
+SUFFIX_LABELS = frozenset(
+    label for suffix in PUBLIC_SUFFIXES for label in suffix.split(".")
+)
 # A real anti-fraud control on an account-changing request (SIM swap, device
 # link, mobile-banking transfer) requires ACTION to stop a request you didn't
 # make. A message that instead makes silence the default for the fraud branch
