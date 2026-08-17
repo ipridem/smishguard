@@ -255,6 +255,14 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "{brand}: our agent will call you in 5 minutes. Please repeat the security code we sent so we can cancel the ${amount} transaction.",
         "Support ticket {ref} opened. Our officer is calling now — tell them the one-time code to verify your identity.",
         "{brand}: mumiriri wedu achakufonerai. Verengai code yatumirwa pafoni yenyu kuti timise ${amount}.",
+        # brand + a full personal-looking MSISDN callback, no URL at all --
+        # brand_with_untrusted_channel (brand + unofficial domain OR unknown
+        # full number) almost never saw the "full number" half fire without
+        # a URL alongside it, so the model leaned on has_unofficial_url for
+        # nearly all of that feature's signal and this one stayed near zero
+        "{brand} Agent: your PIN is required to release the pending ${amount} cash-out. Call or WhatsApp {msisdn} directly, do not wait for the app.",
+        "{brand}: to avoid losing your ${amount} reversal, send your PIN to this number now: {msisdn}.",
+        "Official {brand} line {msisdn}: confirm your PIN here to receive the ${amount} sent to you in error.",
     ],
     SmsLabel.PRIZE_SCAM: [
         "Congratulations! Your number has won ${amount} in the EcoCash promo. Claim at {url}.",

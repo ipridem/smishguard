@@ -127,6 +127,12 @@ REQUEST_CUES = [
 ]
 BRAND_NAMES = [
     "ecocash", "onemoney", "innbucks", "telecash", "omari", "mukuru", "zipit",
+    # pan-African mobile-money/telco brands -- the imported hf_african_smishing
+    # corpus (59% of all training rows) is dense with these; without them
+    # brand_lookalike_domain and brand_with_*_channel were blind to most of
+    # the real (non-synthetic) training data's brand-impersonation examples,
+    # which is why they stayed underpowered despite being structurally sound
+    "m-pesa", "mpesa", "mtn", "safaricom", "airtel", "orange", "vodacom",
 ]
 # real institutions never link anywhere else in SMS; anything off-list is suspect
 OFFICIAL_DOMAINS = {
