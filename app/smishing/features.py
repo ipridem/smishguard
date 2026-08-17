@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
+from app.smishing.normalize import canonicalise
+
 URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 # 3-5 bare digits, but never a calendar year — "changed on 29 Jul 2026" is a
 # timestamp, not an SMS short code
@@ -402,6 +404,7 @@ def normalize_for_tfidf(text: str) -> str:
     learns the scam *pattern* ("your OTP is <NUM>, click <URL>") instead of
     memorizing incidental digit strings from this synthetic corpus, e.g. "00"
     showing up as a vocabulary token from both "$50.00" and "09:00"."""
+    text = canonicalise(text)
     text = URL_RE.sub(" URL_TOKEN ", text)
     text = TRACKING_ID_RE.sub(" TRACKING_ID_TOKEN ", text)
     text = CURRENCY_AMOUNT_RE.sub(" CURRENCY_AMOUNT_TOKEN ", text)
@@ -414,6 +417,7 @@ def normalize_for_tfidf(text: str) -> str:
 
 
 def extract_features(text: str) -> list[float]:
+    text = canonicalise(text)
     lower = text.lower()
     has_url = bool(URL_RE.search(text))
     has_shortcode = _has_shortcode(text)
