@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from app.smishing.normalize import canonicalise, ussd_embeds_msisdn
+from app.smishing.normalize import canonicalise, has_transaction_reference, ussd_embeds_msisdn
 from app.smishing.psl_suffixes import PUBLIC_SUFFIXES
 
 # Scheme-less bare domains ("ecocash-help.net/unlock") have no "https://" or
@@ -314,7 +314,7 @@ FEATURE_NAMES = [
     "requests_identity_verification", "requests_personal_id",
     "deceptive_subdomain", "passive_consent_device_change",
     "authorization_via_inbound_call", "screen_mismatch_coaching",
-    "ussd_advance_fee_offer", "ussd_embeds_msisdn",
+    "ussd_advance_fee_offer", "ussd_embeds_msisdn", "has_transaction_reference",
 ]
 
 
@@ -494,6 +494,13 @@ def extract_features(text: str) -> list[float]:
         # independent, unlike ussd_advance_fee_offer above, which needs an
         # explicit amplification promise and misses plain USSD-PIN scams.
         float(ussd_embeds_msisdn(text)),
+        # genuine automated financial SMS carry a machine-minted reference
+        # (Ref MP250817.1432.K84210, REV-88214, meter/policy numbers) because
+        # the sender has a back end; fraud SMS rarely do. The model's first
+        # real pro-legit signal -- has_currency_amount alone (+2.72 toward
+        # fraud) currently has nothing opposing it, which is why a plain
+        # "send money to this number" message reads as identical to a scam.
+        float(has_transaction_reference(text)),
     ]
 
 

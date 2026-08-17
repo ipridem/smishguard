@@ -26,6 +26,7 @@ FEATURE_LABELS = {
     "screen_mismatch_coaching": "Pre-excuses the approval screen not matching the message's story",
     "ussd_advance_fee_offer": "USSD code paired with a promise of getting back more than you send",
     "ussd_embeds_msisdn": "USSD code sends money to an embedded phone number",
+    "has_transaction_reference": "Includes a machine-generated reference number",
 }
 
 

@@ -495,3 +495,21 @@ def test_ussd_embeds_msisdn_is_wording_independent():
     assert third_party_transfer["ussd_embeds_msisdn"] == 1.0
     assert menu_path["ussd_embeds_msisdn"] == 0.0
     assert biller_code["ussd_embeds_msisdn"] == 0.0
+
+
+def test_has_transaction_reference_is_pro_legit_and_url_stripped_first():
+    genuine = _feature_dict(
+        "EcoCash: Confirmed. You have sent $45.00 to 0772134556 TENDAI MOYO. "
+        "Fee $0.45. New balance $112.30. Ref MP250817.1432.K84210"
+    )
+    no_reference = _feature_dict(
+        "Good evening family. The funeral contribution is $10 per household. "
+        "Please send to Aunt Rudo on 0772 884 110 before Friday."
+    )
+    scam_shortlink = _feature_dict(
+        "CONGRATS! You have won $500 in the EcoCash mega draw. "
+        "Claim before 18:00 today: bit.ly/ecc-claim9"
+    )
+    assert genuine["has_transaction_reference"] == 1.0
+    assert no_reference["has_transaction_reference"] == 0.0
+    assert scam_shortlink["has_transaction_reference"] == 0.0
