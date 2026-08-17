@@ -68,18 +68,27 @@ the generator alone produces.
 
 The trainer builds TF-IDF (word + char n-gram) + the engineered features →
 Logistic Regression + Linear SVM baselines, evaluates on a held-out test
-set *and* an adversarial (leetspeak-obfuscated) test set, saves the served
-model (Logistic Regression, for `predict_proba`) to
+set *and* an adversarial (multi-technique obfuscated: leet, homoglyph,
+fullwidth, zero-width, defanged URLs, spaced letters) test set, saves the
+served model (Logistic Regression, for `predict_proba`) to
 `ml/smishing_model.joblib`, and writes full metrics to `ml/metrics.json`.
 
-**Read the adversarial score, not the clean one.** Clean test F1 is
-inflated by template-generation artifacts (near-duplicate structure across
-samples trained and evaluated on the same synthetic generator) — on seed
-42 it reads ~1.00 for both models, which is not a real-world accuracy
-claim. The adversarial (obfuscated) F1 — ~0.20–0.27 depending on model — is
-the more honest robustness signal, and real reported SMS (not synthetic
-templates) remain the highest-value missing ingredient for closing that
-gap further.
+**`adversarial_macro_f1` is the headline metric, not `test_macro_f1`.**
+Earlier versions of this trainer used a plain `train_test_split`, which
+scatters paraphrases of the same template across train and test — the
+clean score was measuring memorisation, not generalisation, and read a
+suspicious ~1.00 for both models. The split is now grouped on
+`template_id` (`SmsMessage.template_id`, set by `generate_sms.py`) via
+`GroupShuffleSplit`, so every paraphrase of one template lands on one side
+only, and a fraction of fraud-labeled training rows are additionally
+augmented with obfuscated variants so the char n-grams see some of that
+surface directly. On seed 42 with a 6,000-row generated corpus this reads
+`test_macro_f1` ≈ 0.73–0.82 and `adversarial_macro_f1` ≈ 0.71–0.78
+depending on model — both well below 1.0, which is the point: this is the
+first honest number this project has produced. `metrics.json` records
+`headline_metric: "adversarial_macro_f1"` explicitly. Real reported SMS
+(not synthetic templates) remain the highest-value missing ingredient for
+closing the clean/adversarial gap further.
 
 ## Run
 

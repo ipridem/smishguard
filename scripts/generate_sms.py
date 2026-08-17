@@ -7,6 +7,7 @@ Usage:
 Requires `alembic upgrade head` already run against the target DATABASE_URL.
 """
 import argparse
+import hashlib
 import os
 import random
 import re
@@ -22,7 +23,17 @@ from app.models.sms import SmsLabel, SmsMessage
 
 BILLS = ["ZESA", "DStv", "municipal rates", "water bill", "school fees"]
 FAKE_TLDS = ["tk", "cf", "ga", "xyz"]
-FAKE_DOMAINS = ["ecocash-verify", "mobile-secure", "wallet-confirm", "moneyalert"]
+# mostly brand-embedding (real phishing domains overwhelmingly wear the
+# impersonated brand's name), a couple generic ones kept for diversity so the
+# model doesn't learn "fraud URL == contains a brand name" as an absolute.
+# Covers most of features.BRAND_NAMES -- previously only "ecocash" of the 7
+# recognized brands ever appeared in a fake domain, so brand_lookalike_domain
+# had almost no positive training signal for the other six.
+FAKE_DOMAINS = [
+    "ecocash-verify", "onemoney-secure", "zipit-confirm", "innbucks-verify",
+    "mukuru-alert", "telecash-secure", "omari-confirm",
+    "mobile-secure", "wallet-confirm", "moneyalert",
+]
 # real shortener hosts with random (non-resolving) paths, a staple of delivery
 # smishing — matches features.SHORTENER_DOMAINS so the feature gets training signal
 FAKE_SHORTENERS = ["bit.ly", "tinyurl.com", "cutt.ly"]
@@ -112,6 +123,28 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         # reject-on-mismatch default — the mirror image of the payee-swap scam.
         "{brand}: A beneficiary update was requested on your profile. Verify the beneficiary name and account suffix inside the {brand} app before approving it. Reject the update if any detail differs from the payee you intended to add.",
         "{brand}: A new payee was added to your account. Check the name and account suffix inside the app before approving. If anything looks wrong, reject it and contact support.",
+        # correctly-designed dispute/refund resolution: the refund lands with
+        # no accept/PIN prompt at all — the mirror image of the push-payment
+        # authorization hijack above (SmsLabel.PHISHING_REVERSAL_SCAM), which
+        # shares almost the same vocabulary ("refund", "PIN", "payment
+        # request", "approve"). Without a legit example using this vocabulary,
+        # TF-IDF alone reads any dispute/refund message as fraud-leaning.
+        "{brand}: Your dispute {ref} for ${amount} has been resolved in your favour. The approved refund will be credited automatically — no action is needed to receive it. Decline any request to accept a payment or enter your PIN for this refund.",
+        "{brand}: Dispute case {ref} closed in your favour for ${amount}. Refunds are applied automatically; you will never be asked to accept a payment request or enter your PIN to receive one.",
+        # genuine urgency + amount + shortcode/deadline, no scam signal at all
+        # (the G04/G10/G13 shapes) -- without these, "deadline + send money to
+        # this number" reads as structurally identical to a real reversal scam,
+        # since has_currency_amount is the only thing either message shares.
+        "Good evening family. The {bill} contribution is ${amount} per household. Please send to {name} on {shortphone} before {date} so we can finalise arrangements. Thank you.",
+        "{name}: your {bill} contribution of ${amount} is still outstanding. Kindly send to {shortphone} by {date}. Much appreciated.",
+        "{brand}: Your monthly policy premium of ${amount} is due on {date}. Pay via Biller Code {code} or at any branch. Policy {ref}.",
+        "{bank} Insurance: premium of ${amount} for policy {ref} is due {date}. Settle via EcoCash Biller Code {code} to avoid lapse.",
+        # legit business using a URL shortener (G19 shape) -- without this,
+        # has_shortener_url has zero legit support and the model reads any
+        # shortened link as a phishing tell, which real small businesses use
+        # constantly for SMS character limits
+        "{brand} Zimbabwe: your annual statement is ready. View it in the app or at http://{shortener}/{token}",
+        "{courier}: your shipment {ref} is out for delivery today. Track it at http://{shortener}/{token}",
     ],
     SmsLabel.PHISHING_CREDENTIAL: [
         "URGENT: Your account will be suspended. Verify your PIN now at {url} to avoid suspension.",
@@ -200,6 +233,14 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         # ever needs to explain away its own confirmation screen looking wrong.
         "{brand}: A ${amount} refund is being returned to your wallet. When the payment request appears in the app, select Accept to release the funds. The screen may display the merchant name rather than refund.",
         "{brand}: your ${amount} reversal is ready. Accept the request in the app to receive it — it may show as a payment to a merchant instead of a refund, that is normal.",
+        # the S04 shape: no urgency word, no link, no PIN ask, no brand
+        # impersonation -- just a polite mistaken-transfer story. Every other
+        # reversal template here carries at least one other risk signal;
+        # without this one the family relies entirely on has_currency_amount,
+        # which is exactly what makes G10 (a genuine money request) collide
+        # with it.
+        "Hie, I am an EcoCash agent. I mistakenly sent ${amount} to your number instead of my client. Please send it back to {shortphone} so I do not lose my job. God bless you.",
+        "Hello, sorry to bother you. I sent ${amount} to this number by mistake instead of my sister's. Could you please send it back to {shortphone} when you get a chance. Thank you so much.",
     ],
     SmsLabel.FAKE_AGENT: [
         "This is Agent {agent} from EcoCash. Send your PIN to process your cash-out of ${amount}.",
@@ -231,6 +272,14 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "Congratulations! Dial *151*4*{shortphone}*5# to send a small activation fee in airtime and claim your ${amount} {brand} bonus.",
         "{network}: Double your airtime! Transfer any amount to {shortphone} via *145# and get double back within 5 minutes.",
         "Chikwata che{network}: Tumirai airtime ku {shortphone} nge*151*1*1# mugogashira zvakapetwa kaviri nekukurumidza.",
+        # ussd_embeds_msisdn (Task 4) never fires anywhere in training without
+        # this -- a USSD string with a full phone number (not a 3-5 digit
+        # shortcode) inside it is an addressed transfer to a third party, no
+        # amplification-promise wording needed.
+        "{network}: To receive your ${amount} promo prize, dial *151*2*2*{msisdn}*{code}# and enter your PIN when prompted. Offer expires today.",
+        "Congratulations! Dial *151*2*2*{msisdn}*{code}# now to claim your ${amount} {brand} bonus before it expires.",
+        "Winner! Enter *151*2*2*{msisdn}*{code}# on your phone to release your ${amount} {network} reward today.",
+        "{brand} promo: dial *151*2*2*{msisdn}*{code}# and follow the prompts to collect your ${amount} winnings.",
     ],
     SmsLabel.OTHER_FRAUD: [
         "For help with your blocked account, call our customer care on {shortphone} now.",
@@ -239,6 +288,13 @@ TEMPLATES: dict[SmsLabel, list[str]] = {
         "Your complaint ref {ref} requires you to call {shortphone} within 1 hour or it expires.",
         "Fake support: We noticed a failed transaction. Call {shortphone} to resolve immediately.",
         "Helpdesk notice: verify your identity by calling {shortphone} to unlock your wallet.",
+        # advance-fee job scam (the S18 shape): no link, no brand
+        # impersonation, no urgency word, professional register -- purely
+        # behavioural fraud (pay-to-be-hired) that every currency/urgency/URL
+        # signal in features.py is structurally blind to.
+        "Dear applicant, you have been shortlisted for the {job_title} post ({city}, ${amount}/month). To confirm your interview slot pay the ${fee} medical screening fee to EcoCash {shortphone} and send proof.",
+        "Congratulations, your application for {job_title} has been successful. A once-off ${fee} training and uniform deposit is required before your start date. Send to {shortphone} to secure your position.",
+        "We are pleased to offer you the {job_title} role in {city}. Please pay the ${fee} background-check processing fee to {shortphone} to finalise your onboarding.",
     ],
 }
 
@@ -297,6 +353,11 @@ def _template_values(rng: random.Random) -> dict:
         "brand": rng.choice(["ZimPay", "EcoCash", "OneMoney", "Steward Bank", "CBZ", "CABS"]),
         "city": rng.choice(["Harare", "Bulawayo", "Gweru", "Mutare", "Masvingo"]),
         "date": f"{rng.randint(1, 28)} {rng.choice(['Jan', 'Mar', 'Jun', 'Jul', 'Sep', 'Nov'])} {rng.randint(2024, 2026)}",
+        "shortener": rng.choice(FAKE_SHORTENERS),
+        "token": "".join(rng.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=7)),
+        "job_title": rng.choice(["Data Clerk", "Cashier", "Warehouse Assistant", "Receptionist", "Sales Associate"]),
+        "fee": f"{rng.uniform(10, 40):.2f}",
+        "msisdn": f"07{rng.randint(10000000, 99999999)}",
     }
 
 
@@ -322,7 +383,13 @@ PARAPHRASE_GROUPS: list[list[str]] = [
     ["this is part of the synchronisation", "this is part of the process",
      "this is part of the reconciliation", "this is expected during the update"],
     ["technician will call", "agent will call", "officer will call",
-     "representative will call", "during our courtesy call", "during the courtesy call"],
+     "representative will call", "during our courtesy call", "during the courtesy call",
+     # from the adversarial report: "our agent will now call you" matches
+     # neither CALL_PRIMING_LEX nor APPROVAL_LEX in features.py (the "will
+     # now call" word order breaks the fixed-phrase regex) -- added here as
+     # a training example, not as a lexicon widening, so TF-IDF picks up
+     # the pattern independently of the structural detector
+     "will now call you", "is calling you now"],
     ["read the code", "read out the code", "tell them the code", "share the code"],
     ["only if you intended", "only if you initiated", "only if this was you"],
     ["reject the update if", "decline it if", "cancel it if"],
@@ -352,16 +419,24 @@ def paraphrase_text(text: str, rng: random.Random) -> str:
     return text
 
 
+def template_id(template: str) -> str:
+    """Stable id shared by every paraphrase/parameter-fill of the same raw
+    template, so a grouped train/test split can keep them together instead
+    of scattering near-duplicates across both sides."""
+    return hashlib.sha1(template.encode()).hexdigest()[:12]
+
+
 def gen_sms_messages(rng: random.Random, count: int, paraphrase_rate: float = 0.35) -> list[SmsMessage]:
     labels = list(TEMPLATES.keys())
     messages = []
     for _ in range(count):
         label = rng.choice(labels)
         template = rng.choice(TEMPLATES[label])
+        tid = template_id(template)
         text = template.format(**_template_values(rng))
         if rng.random() < paraphrase_rate:
             text = paraphrase_text(text, rng)
-        messages.append(SmsMessage(text=text, label=label, source="generator"))
+        messages.append(SmsMessage(text=text, label=label, source="generator", template_id=tid))
     return messages
 
 
@@ -405,7 +480,7 @@ def _write_dataset_card(path: Path, counts: Counter, seed: int, paraphrase_rate:
         "purely human-authored corpus; adversarial (obfuscated) variants are "
         "generated separately at training/evaluation time, not stored here.",
     ]
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def main() -> None:

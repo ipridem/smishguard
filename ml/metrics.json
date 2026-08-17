@@ -1,245 +1,248 @@
 {
+  "headline_metric": "adversarial_macro_f1",
   "seed": 42,
-  "train_size": 8017,
-  "val_size": 1145,
-  "test_size": 2291,
+  "class_weight": null,
+  "split": "grouped (template_id) via GroupShuffleSplit -- paraphrases of one template never straddle train/val/test",
+  "train_size": 11033,
+  "val_size": 1576,
+  "test_size": 2851,
   "served_model": "logistic_regression",
   "models": {
     "logistic_regression": {
-      "val_macro_f1": 1.0,
-      "test_macro_f1": 1.0,
-      "adversarial_macro_f1": 0.3256882267001372,
+      "adversarial_macro_f1": 0.7100542639877366,
+      "test_macro_f1": 0.7282366005450289,
+      "val_macro_f1": 0.6707646775360975,
       "test_report": {
         "account_takeover": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 85.0
+          "precision": 0.47959183673469385,
+          "recall": 0.5222222222222223,
+          "f1-score": 0.5,
+          "support": 90.0
         },
         "fake_agent": {
           "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 85.0
+          "recall": 0.5490196078431373,
+          "f1-score": 0.7088607594936709,
+          "support": 153.0
         },
         "legit": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 900.0
+          "precision": 0.8710575139146568,
+          "recall": 0.9242125984251969,
+          "f1-score": 0.8968481375358166,
+          "support": 1016.0
         },
         "other_fraud": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 275.0
+          "precision": 0.9077669902912622,
+          "recall": 0.6607773851590106,
+          "f1-score": 0.7648261758691206,
+          "support": 283.0
         },
         "phishing_credential": {
-          "precision": 1.0,
+          "precision": 0.8240190249702735,
           "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 598.0
+          "f1-score": 0.9035202086049544,
+          "support": 693.0
         },
         "phishing_reversal_scam": {
-          "precision": 1.0,
+          "precision": 0.42231075697211157,
           "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 89.0
+          "f1-score": 0.5938375350140056,
+          "support": 106.0
         },
         "prize_scam": {
           "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 259.0
+          "recall": 0.5745098039215686,
+          "f1-score": 0.7297633872976339,
+          "support": 510.0
         },
-        "accuracy": 1.0,
+        "accuracy": 0.8239214310768151,
         "macro avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 2291.0
+          "precision": 0.7863923032689997,
+          "recall": 0.7472488025101622,
+          "f1-score": 0.7282366005450289,
+          "support": 2851.0
         },
         "weighted avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 2291.0
+          "precision": 0.8642111126760029,
+          "recall": 0.8239214310768151,
+          "f1-score": 0.8215941152249716,
+          "support": 2851.0
         }
       },
       "adversarial_report": {
         "account_takeover": {
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1-score": 0.0,
-          "support": 85.0
+          "precision": 0.48623853211009177,
+          "recall": 0.5888888888888889,
+          "f1-score": 0.5326633165829145,
+          "support": 90.0
         },
         "fake_agent": {
           "precision": 1.0,
-          "recall": 0.07058823529411765,
-          "f1-score": 0.13186813186813187,
-          "support": 85.0
+          "recall": 0.47058823529411764,
+          "f1-score": 0.64,
+          "support": 153.0
         },
         "legit": {
-          "precision": 0.4525993883792049,
-          "recall": 0.9866666666666667,
-          "f1-score": 0.6205450733752621,
-          "support": 900.0
+          "precision": 0.8697318007662835,
+          "recall": 0.8937007874015748,
+          "f1-score": 0.8815533980582524,
+          "support": 1016.0
         },
         "other_fraud": {
-          "precision": 0.7068965517241379,
-          "recall": 0.14909090909090908,
-          "f1-score": 0.24624624624624625,
-          "support": 275.0
+          "precision": 0.696969696969697,
+          "recall": 0.6501766784452296,
+          "f1-score": 0.6727605118829981,
+          "support": 283.0
         },
         "phishing_credential": {
-          "precision": 0.8723404255319149,
-          "recall": 0.205685618729097,
-          "f1-score": 0.33288227334235454,
-          "support": 598.0
+          "precision": 0.8231046931407943,
+          "recall": 0.987012987012987,
+          "f1-score": 0.8976377952755905,
+          "support": 693.0
         },
         "phishing_reversal_scam": {
-          "precision": 0.9629629629629629,
-          "recall": 0.29213483146067415,
-          "f1-score": 0.4482758620689655,
-          "support": 89.0
+          "precision": 0.4470046082949309,
+          "recall": 0.9150943396226415,
+          "f1-score": 0.6006191950464397,
+          "support": 106.0
         },
         "prize_scam": {
-          "precision": 0.9175257731958762,
-          "recall": 0.3436293436293436,
-          "f1-score": 0.5,
-          "support": 259.0
+          "precision": 0.9777070063694268,
+          "recall": 0.6019607843137255,
+          "f1-score": 0.7451456310679612,
+          "support": 510.0
         },
-        "accuracy": 0.5120034919249236,
+        "accuracy": 0.8084882497369345,
         "macro avg": {
-          "precision": 0.7017607288277281,
-          "recall": 0.2925422292672583,
-          "f1-score": 0.3256882267001372,
-          "support": 2291.0
+          "precision": 0.7572509053787463,
+          "recall": 0.729631814425595,
+          "f1-score": 0.7100542639877366,
+          "support": 2851.0
         },
         "weighted avg": {
-          "precision": 0.6685894608009355,
-          "recall": 0.5120034919249236,
-          "f1-score": 0.4390559695098694,
-          "support": 2291.0
+          "precision": 0.8397320293879752,
+          "recall": 0.8084882497369345,
+          "f1-score": 0.8059144421003516,
+          "support": 2851.0
         }
       }
     },
     "linear_svm": {
-      "val_macro_f1": 1.0,
-      "test_macro_f1": 1.0,
-      "adversarial_macro_f1": 0.46138893978187434,
+      "adversarial_macro_f1": 0.7828227314305067,
+      "test_macro_f1": 0.8187461890217929,
+      "val_macro_f1": 0.6913179378184331,
       "test_report": {
         "account_takeover": {
-          "precision": 1.0,
+          "precision": 0.6338028169014085,
           "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 85.0
+          "f1-score": 0.7758620689655172,
+          "support": 90.0
         },
         "fake_agent": {
           "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 85.0
+          "recall": 0.8758169934640523,
+          "f1-score": 0.9337979094076655,
+          "support": 153.0
         },
         "legit": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 900.0
+          "precision": 0.8916116870876531,
+          "recall": 0.9311023622047244,
+          "f1-score": 0.9109292248435243,
+          "support": 1016.0
         },
         "other_fraud": {
           "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 275.0
+          "recall": 0.6607773851590106,
+          "f1-score": 0.7957446808510639,
+          "support": 283.0
         },
         "phishing_credential": {
-          "precision": 1.0,
+          "precision": 0.9746835443037974,
           "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 598.0
+          "f1-score": 0.9871794871794872,
+          "support": 693.0
         },
         "phishing_reversal_scam": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 89.0
+          "precision": 0.44339622641509435,
+          "recall": 0.44339622641509435,
+          "f1-score": 0.44339622641509435,
+          "support": 106.0
         },
         "prize_scam": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 259.0
+          "precision": 0.884313725490196,
+          "recall": 0.884313725490196,
+          "f1-score": 0.884313725490196,
+          "support": 510.0
         },
-        "accuracy": 1.0,
+        "accuracy": 0.8937215012276394,
         "macro avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 2291.0
+          "precision": 0.8325440000283072,
+          "recall": 0.8279152418190111,
+          "f1-score": 0.8187461890217929,
+          "support": 2851.0
         },
         "weighted avg": {
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1-score": 1.0,
-          "support": 2291.0
+          "precision": 0.902271281587062,
+          "recall": 0.8937215012276394,
+          "f1-score": 0.8928494872267716,
+          "support": 2851.0
         }
       },
       "adversarial_report": {
         "account_takeover": {
-          "precision": 1.0,
-          "recall": 0.12941176470588237,
-          "f1-score": 0.22916666666666666,
-          "support": 85.0
+          "precision": 0.5806451612903226,
+          "recall": 1.0,
+          "f1-score": 0.7346938775510204,
+          "support": 90.0
         },
         "fake_agent": {
-          "precision": 1.0,
-          "recall": 0.27058823529411763,
-          "f1-score": 0.42592592592592593,
-          "support": 85.0
+          "precision": 0.9919354838709677,
+          "recall": 0.803921568627451,
+          "f1-score": 0.8880866425992779,
+          "support": 153.0
         },
         "legit": {
-          "precision": 0.48532608695652174,
-          "recall": 0.9922222222222222,
-          "f1-score": 0.6518248175182482,
-          "support": 900.0
+          "precision": 0.8815513626834381,
+          "recall": 0.827755905511811,
+          "f1-score": 0.8538071065989847,
+          "support": 1016.0
         },
         "other_fraud": {
-          "precision": 0.7407407407407407,
-          "recall": 0.2909090909090909,
-          "f1-score": 0.4177545691906005,
-          "support": 275.0
+          "precision": 0.748,
+          "recall": 0.6607773851590106,
+          "f1-score": 0.701688555347092,
+          "support": 283.0
         },
         "phishing_credential": {
-          "precision": 0.9455782312925171,
-          "recall": 0.23244147157190637,
-          "f1-score": 0.3731543624161074,
-          "support": 598.0
+          "precision": 0.9063324538258575,
+          "recall": 0.9913419913419913,
+          "f1-score": 0.9469331495520331,
+          "support": 693.0
         },
         "phishing_reversal_scam": {
-          "precision": 0.9666666666666667,
-          "recall": 0.3258426966292135,
-          "f1-score": 0.48739495798319327,
-          "support": 89.0
+          "precision": 0.4845360824742268,
+          "recall": 0.44339622641509435,
+          "f1-score": 0.4630541871921182,
+          "support": 106.0
         },
         "prize_scam": {
-          "precision": 0.9545454545454546,
-          "recall": 0.4864864864864865,
-          "f1-score": 0.6445012787723785,
-          "support": 259.0
+          "precision": 0.8888888888888888,
+          "recall": 0.8941176470588236,
+          "f1-score": 0.8914956011730205,
+          "support": 510.0
         },
-        "accuracy": 0.5678742907027499,
+        "accuracy": 0.8526832690284111,
         "macro avg": {
-          "precision": 0.8704081686002715,
-          "recall": 0.38970028111698846,
-          "f1-score": 0.46138893978187434,
-          "support": 2291.0
+          "precision": 0.7831270618619575,
+          "recall": 0.8030443891591689,
+          "f1-score": 0.7828227314305067,
+          "support": 2851.0
         },
         "weighted avg": {
-          "precision": 0.7460556832553925,
-          "recall": 0.5678742907027499,
-          "f1-score": 0.5197110448937544,
-          "support": 2291.0
+          "precision": 0.8572946077206879,
+          "recall": 0.8526832690284111,
+          "f1-score": 0.8516368852491198,
+          "support": 2851.0
         }
       }
     }

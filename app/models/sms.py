@@ -31,6 +31,12 @@ class SmsMessage(Base):
         Enum(SmsLabel, native_enum=False, length=32), nullable=True
     )  # ground truth, set for training/eval corpus rows
     source: Mapped[str] = mapped_column(String(64), nullable=False)  # generator | scam_report | upload
+    # groups every paraphrase/parameter-fill of the same template together, so
+    # a grouped train/test split can keep them on the same side. Without this,
+    # train_test_split scatters near-duplicate rows across both sides and the
+    # test score measures memorisation, not generalisation. Null for rows not
+    # sourced from a template (scam_report | upload).
+    template_id: Mapped[str | None] = mapped_column(String(16), nullable=True)
     predicted_class: Mapped[SmsLabel | None] = mapped_column(
         Enum(SmsLabel, native_enum=False, length=32), nullable=True
     )
