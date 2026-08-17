@@ -327,12 +327,26 @@ def _url_domains(text: str) -> list[str]:
     return domains
 
 
+def _registrable_suffix_length(labels: list[str]) -> int:
+    """How many trailing labels form the real public suffix: 2 for a compound
+    suffix like "co.zw", else 1. Assuming always-2 (the old behaviour) reads
+    a 2-label suffix like "ac.zw" as domain="ac" + tld="zw", so a subdomain
+    such as "uz" (University of Zimbabwe, "uz.ac.zw") lands in the "interior"
+    slot and collides with "uz" (Uzbekistan's own ccTLD) in SUFFIX_LABELS."""
+    if len(labels) >= 2 and ".".join(labels[-2:]) in PUBLIC_SUFFIXES:
+        return 2
+    return 1
+
+
 def _is_deceptive_host(host: str) -> bool:
     """True when a public-suffix label sits inside the host instead of ending
-    it — the domain-in-subdomain trick. The real registrable domain is always
-    the last two labels, so anything suffix-shaped before them is decoration."""
+    it — the domain-in-subdomain trick. The real registrable domain is the
+    trailing suffix plus one label, so anything suffix-shaped before that is
+    decoration."""
     labels = host.split(".")
-    return any(label in SUFFIX_LABELS for label in labels[:-2])
+    suffix_len = _registrable_suffix_length(labels)
+    interior = labels[: -(suffix_len + 1)] if len(labels) > suffix_len + 1 else []
+    return any(label in SUFFIX_LABELS for label in interior)
 
 
 def _is_passive_consent_device_change(lower_text: str) -> bool:
