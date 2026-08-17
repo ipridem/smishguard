@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from app.smishing.normalize import canonicalise
+from app.smishing.normalize import canonicalise, ussd_embeds_msisdn
 from app.smishing.psl_suffixes import PUBLIC_SUFFIXES
 
 # Scheme-less bare domains ("ecocash-help.net/unlock") have no "https://" or
@@ -308,12 +308,13 @@ SCREEN_MISMATCH_LEX = _lexicon(SCREEN_MISMATCH_CUES)
 
 FEATURE_NAMES = [
     "has_shortcode", "has_full_number", "has_url", "has_currency_amount",
-    "urgency_word_count", "requests_sensitive_credentials", "brand_spoof_indicator",
+    "urgency_word_count", "requests_sensitive_credentials",
+    "brand_with_trusted_channel", "brand_with_untrusted_channel",
     "has_shortener_url", "has_unofficial_url", "brand_lookalike_domain",
     "requests_identity_verification", "requests_personal_id",
     "deceptive_subdomain", "passive_consent_device_change",
     "authorization_via_inbound_call", "screen_mismatch_coaching",
-    "ussd_advance_fee_offer",
+    "ussd_advance_fee_offer", "ussd_embeds_msisdn",
 ]
 
 
@@ -456,17 +457,25 @@ def extract_features(text: str) -> list[float]:
     brand_mentioned = bool(BRAND_LEX.search(lower))
     domains = _url_domains(text)
     unofficial = [d for d in domains if not _is_official(d)]
+    official = [d for d in domains if _is_official(d)]
+    has_full_number = bool(FULL_NUMBER_RE.search(text))
     return [
         float(has_shortcode),
-        float(bool(FULL_NUMBER_RE.search(text))),
+        float(has_full_number),
         float(has_url),
         float(bool(CURRENCY_RE.search(text))),
         float(len(URGENCY_LEX.findall(lower))),
         float(_requested_in_sentence(lower, PIN_OTP_LEX, needs_cue=True)),
-        # brand name mentioned alongside a URL or short callback number is a
-        # classic spoofing pattern (official brands don't ask you to click a
-        # random link or call a 3-5 digit number)
-        float(brand_mentioned and (has_url or has_shortcode)),
+        # brand + a channel the brand actually controls (its own domain, or a
+        # short code) is what real telco/bank notices look like -- split from
+        # the untrusted case below because as one boolean they cancelled out
+        # and the model learned "brand + channel" as a legitimacy marker
+        # (it fires on almost all real telco traffic, since short codes ARE
+        # the normal channel)
+        float(brand_mentioned and (bool(official) or has_shortcode)),
+        # brand + a channel it does NOT control (someone else's domain, or an
+        # arbitrary phone number) is the actual spoofing pattern
+        float(brand_mentioned and (bool(unofficial) or has_full_number)),
         float(any(d in SHORTENER_DOMAINS for d in domains)),
         float(bool(unofficial)),
         # brand name embedded in a domain we don't own = lookalike (ecocash-verify.tk)
@@ -479,6 +488,12 @@ def extract_features(text: str) -> list[float]:
         float(_is_authorization_via_inbound_call(lower)),
         float(_is_screen_mismatch_coaching(lower)),
         float(_is_ussd_advance_fee_offer(text, lower)),
+        # a USSD string with a full MSISDN inside it is an ADDRESSED transfer
+        # to a third party -- no legit telco template does this ("*171#",
+        # "*151*2#" are menu paths, not addressed transfers). Wording-
+        # independent, unlike ussd_advance_fee_offer above, which needs an
+        # explicit amplification promise and misses plain USSD-PIN scams.
+        float(ussd_embeds_msisdn(text)),
     ]
 
 

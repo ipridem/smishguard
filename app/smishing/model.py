@@ -13,7 +13,8 @@ FEATURE_LABELS = {
     "has_currency_amount": "Mentions a currency amount",
     "urgency_word_count": "Urgency language detected",
     "requests_sensitive_credentials": "Requests PIN/OTP/password",
-    "brand_spoof_indicator": "Brand name paired with a suspicious link/shortcode",
+    "brand_with_trusted_channel": "Brand name paired with its own domain or short code",
+    "brand_with_untrusted_channel": "Brand name paired with a suspicious link or number",
     "has_shortener_url": "Link uses a URL shortener",
     "has_unofficial_url": "Link goes to a non-official domain",
     "brand_lookalike_domain": "Brand name embedded in an unofficial domain",
@@ -24,6 +25,7 @@ FEATURE_LABELS = {
     "authorization_via_inbound_call": "Told to approve a prompt or read a code during an inbound call",
     "screen_mismatch_coaching": "Pre-excuses the approval screen not matching the message's story",
     "ussd_advance_fee_offer": "USSD code paired with a promise of getting back more than you send",
+    "ussd_embeds_msisdn": "USSD code sends money to an embedded phone number",
 }
 
 

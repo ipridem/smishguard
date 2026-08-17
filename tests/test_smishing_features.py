@@ -465,8 +465,33 @@ def test_official_vs_unofficial_domain():
     assert subdomain_trick["brand_lookalike_domain"] == 1.0
 
 
-def test_brand_spoof_indicator_requires_brand_and_link_or_shortcode():
+def test_brand_with_untrusted_channel_requires_brand_and_unofficial_link_or_number():
     spoofed = _feature_dict("EcoCash Support: verify at http://ecocash-verify.tk/x")
     legit_mention = _feature_dict("Your EcoCash statement is ready. Balance $80.")
-    assert spoofed["brand_spoof_indicator"] == 1.0
-    assert legit_mention["brand_spoof_indicator"] == 0.0
+    assert spoofed["brand_with_untrusted_channel"] == 1.0
+    assert spoofed["brand_with_trusted_channel"] == 0.0
+    assert legit_mention["brand_with_untrusted_channel"] == 0.0
+    assert legit_mention["brand_with_trusted_channel"] == 0.0
+
+
+def test_brand_with_trusted_channel_requires_brand_and_official_link_or_shortcode():
+    official_link = _feature_dict("Download the app at https://www.ecocash.co.zw/app")
+    shortcode = _feature_dict("EcoCash: dial 143 to check your balance")
+    assert official_link["brand_with_trusted_channel"] == 1.0
+    assert official_link["brand_with_untrusted_channel"] == 0.0
+    assert shortcode["brand_with_trusted_channel"] == 1.0
+    assert shortcode["brand_with_untrusted_channel"] == 0.0
+
+
+def test_ussd_embeds_msisdn_is_wording_independent():
+    third_party_transfer = _feature_dict(
+        "To receive your $250 EcoCash promo prize, dial *151*2*2*0784556301*250# "
+        "and enter your PIN when prompted."
+    )
+    menu_path = _feature_dict("NetOne: Get 2GB for $2 valid 7 days. Dial *171# to buy.")
+    biller_code = _feature_dict(
+        "Nyaradzo: pay via EcoCash Biller Code 011977 or at any branch."
+    )
+    assert third_party_transfer["ussd_embeds_msisdn"] == 1.0
+    assert menu_path["ussd_embeds_msisdn"] == 0.0
+    assert biller_code["ussd_embeds_msisdn"] == 0.0
