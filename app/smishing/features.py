@@ -133,7 +133,19 @@ OFFICIAL_DOMAINS = {
     "ecocash.co.zw", "econet.co.zw", "onemoney.co.zw", "netone.co.zw",
     "innbucks.co.zw", "telecel.co.zw", "mukuru.com", "cbz.co.zw",
     "stewardbank.co.zw", "zimpost.co.zw",
+    # regulator/utility/insurer domains missed above -- e.g. ZIMRA's
+    # efiling.zimra.co.zw scored as an unofficial domain purely because
+    # nobody had listed it
+    "zimra.co.zw", "oldmutual.co.zw", "dhl.com",
 }
+# .gov.zw and .ac.zw are controlled delegations (state / Ministry of Higher
+# Education respectively) -- unlike a generic .com an attacker can freely
+# register a lookalike under, nobody outside the real institution can obtain
+# a host here. Checked as a suffix so every university/ministry is covered
+# without hand-listing each one (uz.ac.zw, msu.ac.zw, ... would otherwise
+# need enumerating one at a time, same failure mode as the missing entries
+# above).
+OFFICIAL_SUFFIXES = (".gov.zw", ".ac.zw")
 # Public-suffix labels. If one shows up in the INTERIOR of a hostname rather
 # than at its end, the host is wearing another domain as a costume:
 # secure.zimpay.co.zw.account-review.com registers as account-review.com but
@@ -392,6 +404,8 @@ def _has_shortcode(text: str) -> bool:
 
 def _is_official(host: str) -> bool:
     # exact or subdomain match; substring alone would let ecocash.co.zw.evil.tk pass
+    if host.endswith(OFFICIAL_SUFFIXES):
+        return True
     return any(host == d or host.endswith("." + d) for d in OFFICIAL_DOMAINS)
 
 
