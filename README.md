@@ -3,7 +3,7 @@
 [![GitHub](https://img.shields.io/badge/GitHub-ipridem%2Fsmishguard-181717?logo=github)](https://github.com/ipridem/smishguard)
 
 A Zimbabwe-context SMS smishing (SMS phishing) classifier: TF-IDF +
-engineered social-engineering features over a logistic-regression pipeline,
+engineered social-engineering features over a calibrated linear-SVM pipeline,
 with a FastAPI JSON API, a static single-page console, per-feature
 explainability, and an optional LLM second opinion for messages the local
 model can't confidently classify.
@@ -24,7 +24,7 @@ offers, and negation/conditional-aware credential and identity-verification
 requests. These sit alongside TF-IDF word/char n-grams (with numeric
 specifics normalised to placeholder tokens so incidental digits never
 become vocabulary) in a `FeatureUnion` feeding a Logistic Regression /
-Linear SVM baseline comparison.
+Linear SVM / calibrated Linear SVM baseline comparison.
 
 The API reports **risk** (P of any fraud class) as the headline metric,
 kept distinct from the 6-class argmax **confidence** — a scam that reads as
@@ -67,10 +67,12 @@ taxonomy, if you want a larger and more lexically varied training set than
 the generator alone produces.
 
 The trainer builds TF-IDF (word + char n-gram) + the engineered features →
-Logistic Regression + Linear SVM baselines, evaluates on a held-out test
+Logistic Regression + Linear SVM + calibrated Linear SVM baselines,
+evaluates on a held-out test
 set *and* an adversarial (multi-technique obfuscated: leet, homoglyph,
 fullwidth, zero-width, defanged URLs, spaced letters) test set, saves the
-served model (Logistic Regression, for `predict_proba`) to
+best `predict_proba`-capable model by `adversarial_macro_f1` (currently
+the calibrated Linear SVM) to
 `ml/smishing_model.joblib`, and writes full metrics to `ml/metrics.json`.
 
 **`adversarial_macro_f1` is the headline metric, not `test_macro_f1`.**
