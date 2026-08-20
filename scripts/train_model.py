@@ -1,6 +1,6 @@
 """Train the smishing classifier: TF-IDF (word + char n-gram) + engineered
 features -> Logistic Regression and Linear SVM baselines. Saves the served
-pipeline (Logistic Regression, for predict_proba) plus metrics.json with
+pipeline (best predict_proba-capable model) plus metrics.json with
 both models' scores on a clean test set and an adversarial (obfuscated)
 test set.
 
@@ -25,6 +25,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import GroupShuffleSplit
 from sklearn.pipeline import FeatureUnion, Pipeline
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.svm import LinearSVC
 
 from app.config import Config
@@ -207,10 +208,13 @@ def main() -> None:
     adversarial_X = [obfuscate(t, rng) for t in X_test]
 
     results = {}
-    served_pipeline = None
+    served_pipeline = served_name = None
     for name, estimator in [
         ("logistic_regression", LogisticRegression(max_iter=1000, class_weight=args.class_weight)),
         ("linear_svm", LinearSVC(class_weight=args.class_weight)),
+        # LinearSVC scores better but has no predict_proba, which the risk
+        # bands need; the calibration wrapper buys it back.
+        ("calibrated_linear_svm", CalibratedClassifierCV(LinearSVC(class_weight=args.class_weight))),
     ]:
         pipeline = build_pipeline(estimator)
         pipeline.fit(X_train, y_train)
@@ -229,8 +233,12 @@ def main() -> None:
             "test_report": test_report,
             "adversarial_report": adv_report,
         }
-        if name == "logistic_regression":
-            served_pipeline = pipeline
+        # serve the best model that can produce probabilities
+        if hasattr(pipeline, "predict_proba") and (
+            served_pipeline is None
+            or adv_report["macro avg"]["f1-score"] > results[served_name]["adversarial_macro_f1"]
+        ):
+            served_pipeline, served_name = pipeline, name
 
     Path(args.model_out).parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(served_pipeline, args.model_out)
@@ -242,7 +250,7 @@ def main() -> None:
         "class_weight": args.class_weight,
         "split": "grouped (template_id) via GroupShuffleSplit -- paraphrases of one template never straddle train/val/test",
         "train_size": len(X_train), "val_size": len(X_val), "test_size": len(X_test),
-        "served_model": "logistic_regression",
+        "served_model": served_name,
         "models": results,
     }, indent=2))
 

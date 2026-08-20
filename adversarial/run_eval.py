@@ -1,6 +1,7 @@
 """Run the 40-case adversarial suite against the trained SmishGuard pipeline."""
 import sys, json
 from collections import Counter, defaultdict
+from pathlib import Path
 sys.path.insert(0, ".")
 
 import joblib
@@ -94,5 +95,5 @@ print("\nsignals that NEVER fired on any of the 40 cases:")
 for n in never:
     print("  -", n)
 
-json.dump(rows, open("results.json", "w"), indent=1)
+json.dump(rows, open(Path(__file__).with_name("results.json"), "w"), indent=1)
 print("\nwrote results.json")

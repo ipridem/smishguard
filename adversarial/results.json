@@ -4,62 +4,62 @@
   "label": "smish",
   "family": "homoglyph-cyrillic",
   "pred": "phishing_credential",
-  "risk": 0.9999125071149936,
-  "conf": 0.9982751071681363,
+  "risk": 0.9968664255519554,
+  "conf": 0.9929278442740654,
   "flagged": true,
   "correct": true,
   "signals": [
    {
-    "label": "Requests identity/account verification",
-    "present": true,
-    "weight": 1.3726339439873376
-   },
-   {
-    "label": "Urgency language detected",
-    "present": true,
-    "weight": 0.9977397760306197
-   },
-   {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Urgency language detected",
+    "present": true,
+    "weight": 0.2186327365375349
+   },
+   {
+    "label": "Requests identity/account verification",
+    "present": true,
+    "weight": 0.007010781119691151
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": 0.006368270496592382
    },
    {
     "label": "Brand name embedded in an unofficial domain",
     "present": true,
-    "weight": -0.24495529135200847
-   },
-   {
-    "label": "Brand name paired with a suspicious link/shortcode",
-    "present": true,
-    "weight": -0.11709215264920898
+    "weight": -0.0043930929123049125
    }
   ],
   "top": [
    {
     "token": "engineered__urgency_word_count",
-    "contribution": 1.9954795520612394
-   },
-   {
-    "token": "engineered__requests_identity_verification",
-    "contribution": 1.3726339439873376
+    "contribution": 0.4372654730750698
    },
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
+    "contribution": 0.2660091343063527
    },
    {
-    "token": "engineered__brand_lookalike_domain",
-    "contribution": -0.24495529135200847
+    "token": "word_tfidf__unusual",
+    "contribution": 0.06395680707297957
+   },
+   {
+    "token": "word_tfidf__restore",
+    "contribution": 0.04035851404864038
    }
   ],
   "text": "Ec\u043eCash: Your wallet has been suspended due to unusual activity. Restore access now: http://ecocash-restore.help/verify",
@@ -70,37 +70,57 @@
   "label": "smish",
   "family": "spaced-keywords",
   "pred": "prize_scam",
-  "risk": 0.8830947312536063,
-  "conf": 0.7306789428655357,
+  "risk": 0.9947550732751534,
+  "conf": 0.9854637144237299,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": 1.6559829483993784
+    "weight": 0.2922668870873091
+   },
+   {
+    "label": "Contains a URL",
+    "present": true,
+    "weight": 0.02709406610686197
+   },
+   {
+    "label": "Link goes to a non-official domain",
+    "present": true,
+    "weight": 0.02709406610686197
+   },
+   {
+    "label": "Link uses a URL shortener",
+    "present": true,
+    "weight": -0.002505062087404874
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": -0.0019835576628540303
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": 1.6559829483993784
+    "contribution": 0.2922668870873091
+   },
+   {
+    "token": "word_tfidf__won",
+    "contribution": 0.14724245394447139
    },
    {
     "token": "word_tfidf__claim",
-    "contribution": 0.33314529316342534
+    "contribution": 0.1109218505011832
    },
    {
     "token": "word_tfidf__draw",
-    "contribution": 0.21270407762543597
+    "contribution": 0.06730265865161496
    },
    {
-    "token": "word_tfidf__draw claim",
-    "contribution": 0.16507320197842998
-   },
-   {
-    "token": "word_tfidf__in the",
-    "contribution": 0.1550853896230923
+    "token": "word_tfidf__won currency_amount_token",
+    "contribution": 0.06252175590747204
    }
   ],
   "text": "C O N G R A T S ! You have w o n $500 in the EcoCash mega draw. Claim before 18:00 today: bit.ly/ecc-claim9",
@@ -111,47 +131,47 @@
   "label": "smish",
   "family": "no-url-callback",
   "pred": "phishing_reversal_scam",
-  "risk": 0.8004653977959867,
-  "conf": 0.25239055030564533,
+  "risk": 0.6012046467720198,
+  "conf": 0.47260184920872633,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": 2.724119990536273
+    "weight": 0.4221634374900498
+   },
+   {
+    "label": "Brand name paired with its own domain or short code",
+    "present": true,
+    "weight": 0.3427541744192873
    },
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": 0.8794397792751221
-   },
-   {
-    "label": "Brand name paired with a suspicious link/shortcode",
-    "present": true,
-    "weight": -0.17314543389809098
+    "weight": 0.16272378804726645
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": 2.724119990536273
+    "contribution": 0.4221634374900498
+   },
+   {
+    "token": "engineered__brand_with_trusted_channel",
+    "contribution": 0.3427541744192873
    },
    {
     "token": "engineered__has_shortcode",
-    "contribution": 0.8794397792751221
+    "contribution": 0.16272378804726645
    },
    {
-    "token": "engineered__brand_spoof_indicator",
-    "contribution": -0.17314543389809098
+    "token": "word_tfidf__num_token num_token",
+    "contribution": 0.04990567222922966
    },
    {
-    "token": "word_tfidf__pending on",
-    "contribution": 0.10084709194636526
-   },
-   {
-    "token": "word_tfidf__to",
-    "contribution": 0.07978345494474672
+    "token": "word_tfidf__transfer",
+    "contribution": 0.04458629368112212
    }
   ],
   "text": "ECOCASH SECURITY: A transfer of $340.00 to an unknown number is pending on your wallet. If this was not you call our agent on 0783 442 197 within 10 minutes to cancel.",
@@ -162,47 +182,47 @@
   "label": "smish",
   "family": "agent-reversal",
   "pred": "phishing_reversal_scam",
-  "risk": 0.9407531568697696,
-  "conf": 0.5515707835258993,
+  "risk": 0.9837207121398917,
+  "conf": 0.9786862547078948,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": 2.724119990536273
+    "weight": 0.4221634374900498
+   },
+   {
+    "label": "Brand name paired with its own domain or short code",
+    "present": true,
+    "weight": 0.3427541744192873
    },
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": 0.8794397792751221
-   },
-   {
-    "label": "Brand name paired with a suspicious link/shortcode",
-    "present": true,
-    "weight": -0.17314543389809098
+    "weight": 0.16272378804726645
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": 2.724119990536273
+    "contribution": 0.4221634374900498
+   },
+   {
+    "token": "engineered__brand_with_trusted_channel",
+    "contribution": 0.3427541744192873
    },
    {
     "token": "engineered__has_shortcode",
-    "contribution": 0.8794397792751221
+    "contribution": 0.16272378804726645
    },
    {
-    "token": "engineered__brand_spoof_indicator",
-    "contribution": -0.17314543389809098
+    "token": "word_tfidf__my",
+    "contribution": 0.08254148229892787
    },
    {
-    "token": "word_tfidf__it",
-    "contribution": 0.12989905563350124
-   },
-   {
-    "token": "word_tfidf__sent",
-    "contribution": 0.10903736022751208
+    "token": "char_tfidf__ i ",
+    "contribution": 0.05346031609619993
    }
   ],
   "text": "Hie, I am an EcoCash agent. I mistakenly sent $120 to your number instead of my client. Please send it back to 0771 903 556 so I do not lose my job. God bless you.",
@@ -213,57 +233,57 @@
   "label": "smish",
   "family": "regulator-impersonation",
   "pred": "phishing_credential",
-  "risk": 0.9999790930501988,
-  "conf": 0.9992268939058705,
+  "risk": 0.9963020343607503,
+  "conf": 0.9931853009882587,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Real domain hidden behind a lookalike subdomain",
     "present": true,
-    "weight": 2.312459815943961
-   },
-   {
-    "label": "Requests identity/account verification",
-    "present": true,
-    "weight": 1.3726339439873376
-   },
-   {
-    "label": "Urgency language detected",
-    "present": true,
-    "weight": 0.9977397760306197
+    "weight": 1.0210343868208989
    },
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Urgency language detected",
+    "present": true,
+    "weight": 0.2186327365375349
+   },
+   {
+    "label": "Requests identity/account verification",
+    "present": true,
+    "weight": 0.007010781119691151
    }
   ],
   "top": [
    {
     "token": "engineered__deceptive_subdomain",
-    "contribution": 2.312459815943961
-   },
-   {
-    "token": "engineered__requests_identity_verification",
-    "contribution": 1.3726339439873376
-   },
-   {
-    "token": "engineered__urgency_word_count",
-    "contribution": 0.9977397760306197
+    "contribution": 1.0210343868208989
    },
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
+    "contribution": 0.2660091343063527
+   },
+   {
+    "token": "engineered__urgency_word_count",
+    "contribution": 0.2186327365375349
+   },
+   {
+    "token": "word_tfidf__complete",
+    "contribution": 0.05981694823850812
    }
   ],
   "text": "POTRAZ NOTICE: SIM cards not re-registered by 20 August will be permanently deactivated. Complete re-registration here: https://potraz-simreg.co.zw.verify-now.net/form",
@@ -274,47 +294,47 @@
   "label": "smish",
   "family": "delivery-fee",
   "pred": "phishing_credential",
-  "risk": 0.8426634284565635,
-  "conf": 0.5521994644269334,
+  "risk": 0.963933121133611,
+  "conf": 0.9437027662745378,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -0.8798116057048182
+    "weight": -0.43813640564802026
    },
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -0.8798116057048182
+    "contribution": -0.43813640564802026
    },
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
-   },
-   {
-    "token": "word_tfidf__pay",
-    "contribution": 0.24885613157656372
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__customs",
-    "contribution": 0.1841758552416757
+    "contribution": 0.10475061305556627
+   },
+   {
+    "token": "word_tfidf__held",
+    "contribution": 0.07774970029650505
    }
   ],
   "text": "Your parcel ZW884120 is held at Harare depot. Outstanding customs fee $2.50. Pay to release: https://track-parcel-zw.com/pay/884120",
@@ -325,42 +345,42 @@
   "label": "smish",
   "family": "otp-relay",
   "pred": "phishing_credential",
-  "risk": 0.9319333238171527,
-  "conf": 0.8213718890838106,
+  "risk": 0.7220421373585131,
+  "conf": 0.6791347504123555,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Requests PIN/OTP/password",
     "present": true,
-    "weight": 1.464229799732776
+    "weight": 0.6590408363199313
    },
    {
     "label": "Urgency language detected",
     "present": true,
-    "weight": 0.9977397760306197
+    "weight": 0.2186327365375349
    }
   ],
   "top": [
    {
     "token": "engineered__requests_sensitive_credentials",
-    "contribution": 1.464229799732776
+    "contribution": 0.6590408363199313
    },
    {
     "token": "engineered__urgency_word_count",
-    "contribution": 0.9977397760306197
+    "contribution": 0.2186327365375349
+   },
+   {
+    "token": "word_tfidf__pin",
+    "contribution": 0.13561418355505603
    },
    {
     "token": "word_tfidf__secure",
-    "contribution": 0.15649550435467538
-   },
-   {
-    "token": "word_tfidf__secure your",
-    "contribution": 0.11337903919430131
+    "contribution": 0.04659951754875607
    },
    {
     "token": "word_tfidf__account",
-    "contribution": 0.09266812472675655
+    "contribution": 0.039971107098145865
    }
   ],
   "text": "EcoCash: 448192 is your one time PIN. Do not share it with anyone. Our agent will now call you to confirm this PIN and secure your account.",
@@ -371,47 +391,47 @@
   "label": "smish",
   "family": "at-sign-url",
   "pred": "phishing_credential",
-  "risk": 0.6924015117550324,
-  "conf": 0.6601788448699851,
+  "risk": 0.9538896394361395,
+  "conf": 0.9423429308000986,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
    },
    {
-    "label": "Brand name paired with a suspicious link/shortcode",
+    "label": "Brand name paired with a suspicious link or number",
     "present": true,
-    "weight": -0.11709215264920898
+    "weight": 0.006368270496592382
    }
   ],
   "top": [
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__account",
-    "contribution": 0.14469553365482546
+    "contribution": 0.06285307061739757
+   },
+   {
+    "token": "word_tfidf__verification",
+    "contribution": 0.059625657496897494
    },
    {
     "token": "word_tfidf__account verification",
-    "contribution": 0.12863797201900076
-   },
-   {
-    "token": "word_tfidf__verification required",
-    "contribution": 0.12863797201900076
+    "contribution": 0.059579223988928336
    }
   ],
   "text": "Account verification required. Log in: https://www.ecocash.co.zw@secure-login-zw.ru/auth",
@@ -422,47 +442,47 @@
   "label": "smish",
   "family": "ip-literal-url",
   "pred": "phishing_credential",
-  "risk": 0.90041711111881,
-  "conf": 0.8752954758092109,
+  "risk": 0.977689062524056,
+  "conf": 0.968520720144703,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
    },
    {
-    "label": "Brand name paired with a suspicious link/shortcode",
+    "label": "Brand name paired with a suspicious link or number",
     "present": true,
-    "weight": -0.11709215264920898
+    "weight": 0.006368270496592382
    }
   ],
   "top": [
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
-   },
-   {
-    "token": "word_tfidf__secure",
-    "contribution": 0.24440557643936106
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__detected",
-    "contribution": 0.21850164646506465
+    "contribution": 0.08171388647610493
    },
    {
     "token": "word_tfidf__unusual",
-    "contribution": 0.21665238864913394
+    "contribution": 0.07102564269241905
+   },
+   {
+    "token": "word_tfidf__secure",
+    "contribution": 0.07064900176989543
    }
   ],
   "text": "OneMoney: unusual login detected from a new device. Secure your wallet: http://102.68.44.19:8080/onemoney/secure",
@@ -473,47 +493,47 @@
   "label": "smish",
   "family": "punycode",
   "pred": "phishing_credential",
-  "risk": 0.9531486038878957,
-  "conf": 0.9388601802916696,
+  "risk": 0.9871742266937786,
+  "conf": 0.9806805062514539,
   "flagged": true,
   "correct": true,
   "signals": [
    {
-    "label": "Urgency language detected",
-    "present": true,
-    "weight": 0.9977397760306197
-   },
-   {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.6250269640874083
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Urgency language detected",
+    "present": true,
+    "weight": 0.2186327365375349
    }
   ],
   "top": [
    {
-    "token": "engineered__urgency_word_count",
-    "contribution": 0.9977397760306197
-   },
-   {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
+    "contribution": 0.4010833281456064
    },
    {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
+    "contribution": 0.2660091343063527
+   },
+   {
+    "token": "engineered__urgency_word_count",
+    "contribution": 0.2186327365375349
+   },
+   {
+    "token": "word_tfidf__card",
+    "contribution": 0.05436597256057176
    },
    {
     "token": "word_tfidf__card ending",
-    "contribution": 0.18689901620462873
-   },
-   {
-    "token": "word_tfidf__ending num_token",
-    "contribution": 0.18431965766429223
+    "contribution": 0.041179080845502584
    }
   ],
   "text": "Steward Bank: your card ending 4417 is blocked. Unblock: https://xn--stewardbnk-9db.co.zw/unlock",
@@ -523,13 +543,55 @@
   "id": "S11",
   "label": "smish",
   "family": "fullwidth-unicode",
-  "pred": "legit",
-  "risk": 0.2147983056401518,
-  "conf": 0.7852016943598482,
-  "flagged": false,
-  "correct": false,
-  "signals": [],
-  "top": [],
+  "pred": "phishing_credential",
+  "risk": 0.9648017256799287,
+  "conf": 0.9579349727131883,
+  "flagged": true,
+  "correct": true,
+  "signals": [
+   {
+    "label": "Link goes to a non-official domain",
+    "present": true,
+    "weight": 0.4010833281456064
+   },
+   {
+    "label": "Contains a URL",
+    "present": true,
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Requests identity/account verification",
+    "present": true,
+    "weight": 0.007010781119691151
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": 0.006368270496592382
+   }
+  ],
+  "top": [
+   {
+    "token": "engineered__has_unofficial_url",
+    "contribution": 0.4010833281456064
+   },
+   {
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
+   },
+   {
+    "token": "word_tfidf__account",
+    "contribution": 0.07693041554956295
+   },
+   {
+    "token": "word_tfidf__your account",
+    "contribution": -0.059595200160383846
+   },
+   {
+    "token": "word_tfidf__will be",
+    "contribution": 0.03882109759259052
+   }
+  ],
   "text": "\uff25\uff43\uff4f\uff23\uff41\uff53\uff48\uff1a \uff39\uff4f\uff55\uff52\u3000\uff41\uff43\uff43\uff4f\uff55\uff4e\uff54\u3000\uff57\uff49\uff4c\uff4c\u3000\uff42\uff45\u3000\uff43\uff4c\uff4f\uff53\uff45\uff44\uff0e \uff36\uff45\uff52\uff49\uff46\uff59\uff1a \uff48\uff54\uff54\uff50\uff1a\uff0f\uff0f\uff45\uff43\uff43\uff0d\uff56\uff45\uff52\uff49\uff46\uff59\uff0e\uff4e\uff45\uff54",
   "note": "Fullwidth codepoints. Even has_url regex fails (\uff1a\uff0f\uff0f not ://). Needs NFKC normalisation before featurising."
  },
@@ -537,32 +599,53 @@
   "id": "S12",
   "label": "smish",
   "family": "leetspeak",
-  "pred": "legit",
-  "risk": 0.39298866863774684,
-  "conf": 0.6070113313622532,
-  "flagged": false,
-  "correct": false,
-  "signals": [],
+  "pred": "phishing_credential",
+  "risk": 0.9253242027598891,
+  "conf": 0.9141848991350241,
+  "flagged": true,
+  "correct": true,
+  "signals": [
+   {
+    "label": "Link goes to a non-official domain",
+    "present": true,
+    "weight": 0.4010833281456064
+   },
+   {
+    "label": "Contains a URL",
+    "present": true,
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": 0.006368270496592382
+   },
+   {
+    "label": "Brand name embedded in an unofficial domain",
+    "present": true,
+    "weight": -0.0043930929123049125
+   }
+  ],
   "top": [
    {
-    "token": "word_tfidf__net",
-    "contribution": -0.21624673148080337
+    "token": "engineered__has_unofficial_url",
+    "contribution": 0.4010833281456064
+   },
+   {
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
+   },
+   {
+    "token": "word_tfidf__y0ur",
+    "contribution": 0.06976947554801922
+   },
+   {
+    "token": "word_tfidf__account",
+    "contribution": 0.053859804323141615
    },
    {
     "token": "word_tfidf__on",
-    "contribution": 0.21306542025311115
-   },
-   {
-    "token": "word_tfidf__alert",
-    "contribution": -0.08531489829948888
-   },
-   {
-    "token": "word_tfidf__is",
-    "contribution": 0.0672992223003897
-   },
-   {
-    "token": "word_tfidf__ecocash",
-    "contribution": -0.05740141903164646
+    "contribution": -0.040912700754287074
    }
   ],
   "text": "3c0Cash Alert: y0ur acc0unt is on h0ld. Re-activate at ecocash-he1p.net/unl0ck or lose your ba1ance.",
@@ -572,53 +655,53 @@
   "id": "S13",
   "label": "smish",
   "family": "whatsapp-redirect",
-  "pred": "legit",
-  "risk": 0.32966493614736037,
-  "conf": 0.6703350638526396,
-  "flagged": false,
-  "correct": false,
+  "pred": "phishing_credential",
+  "risk": 0.9487096823748933,
+  "conf": 0.8521982828476495,
+  "flagged": true,
+  "correct": true,
   "signals": [
-   {
-    "label": "Contains a full phone number",
-    "present": true,
-    "weight": 0.7397554486176249
-   },
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": -0.539050207547357
-   },
-   {
-    "label": "Brand name paired with a suspicious link/shortcode",
-    "present": true,
-    "weight": 0.3666223480901034
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": 0.2660091343063527
+   },
+   {
+    "label": "Contains a full phone number",
+    "present": true,
+    "weight": 0.158373980638941
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": 0.006368270496592382
    }
   ],
   "top": [
    {
-    "token": "engineered__has_full_number",
-    "contribution": 0.7397554486176249
-   },
-   {
     "token": "engineered__has_unofficial_url",
-    "contribution": -0.539050207547357
+    "contribution": 0.4010833281456064
    },
    {
-    "token": "engineered__brand_spoof_indicator",
-    "contribution": 0.3666223480901034
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
    },
    {
-    "token": "word_tfidf__on",
-    "contribution": 0.16645133778770882
+    "token": "engineered__has_full_number",
+    "contribution": 0.158373980638941
    },
    {
-    "token": "word_tfidf__claim",
-    "contribution": -0.1413853027351166
+    "token": "word_tfidf__reversal",
+    "contribution": -0.09049410670276331
+   },
+   {
+    "token": "word_tfidf__with your",
+    "contribution": 0.050840358903296134
    }
   ],
   "text": "EcoCash Customer Care: we could not reach you regarding your reversal claim. Chat with your assigned officer on WhatsApp: https://wa.me/263779112044",
@@ -628,53 +711,63 @@
   "id": "S14",
   "label": "smish",
   "family": "ussd-injection",
-  "pred": "phishing_credential",
-  "risk": 0.9747334648341761,
-  "conf": 0.5825229672875297,
+  "pred": "prize_scam",
+  "risk": 0.9981725781871689,
+  "conf": 0.9907934774162197,
   "flagged": true,
   "correct": true,
   "signals": [
    {
-    "label": "Requests PIN/OTP/password",
+    "label": "USSD code sends money to an embedded phone number",
     "present": true,
-    "weight": 1.464229799732776
-   },
-   {
-    "label": "Urgency language detected",
-    "present": true,
-    "weight": 0.9977397760306197
-   },
-   {
-    "label": "Contains a full phone number",
-    "present": true,
-    "weight": 0.9890713818601858
+    "weight": 0.9209358781894469
    },
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -0.8798116057048182
+    "weight": 0.2922668870873091
+   },
+   {
+    "label": "Requests PIN/OTP/password",
+    "present": true,
+    "weight": 0.25949360447035114
+   },
+   {
+    "label": "Urgency language detected",
+    "present": true,
+    "weight": -0.19542150619696932
+   },
+   {
+    "label": "Contains a full phone number",
+    "present": true,
+    "weight": -0.023863614511269726
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": -0.0019835576628540303
    }
   ],
   "top": [
    {
-    "token": "engineered__requests_sensitive_credentials",
-    "contribution": 1.464229799732776
-   },
-   {
-    "token": "engineered__urgency_word_count",
-    "contribution": 0.9977397760306197
-   },
-   {
-    "token": "engineered__has_full_number",
-    "contribution": 0.9890713818601858
+    "token": "engineered__ussd_embeds_msisdn",
+    "contribution": 0.9209358781894469
    },
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -0.8798116057048182
+    "contribution": 0.2922668870873091
    },
    {
-    "token": "word_tfidf__and",
-    "contribution": 0.059960002062640884
+    "token": "engineered__requests_sensitive_credentials",
+    "contribution": 0.25949360447035114
+   },
+   {
+    "token": "engineered__urgency_word_count",
+    "contribution": -0.19542150619696932
+   },
+   {
+    "token": "word_tfidf__promo",
+    "contribution": 0.04951665561873569
    }
   ],
   "text": "To receive your $250 EcoCash promo prize, dial *151*2*2*0784556301*250# and enter your PIN when prompted. Offer expires today.",
@@ -685,37 +778,57 @@
   "label": "smish",
   "family": "obfuscated-url",
   "pred": "phishing_credential",
-  "risk": 0.8408480801803402,
-  "conf": 0.5731778593456305,
+  "risk": 0.94996535323197,
+  "conf": 0.8340747895868393,
   "flagged": true,
   "correct": true,
   "signals": [
    {
+    "label": "Link goes to a non-official domain",
+    "present": true,
+    "weight": 0.4010833281456064
+   },
+   {
+    "label": "Contains a URL",
+    "present": true,
+    "weight": 0.2660091343063527
+   },
+   {
     "label": "Requests identity/account verification",
     "present": true,
-    "weight": 1.3726339439873376
+    "weight": 0.007010781119691151
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": 0.006368270496592382
+   },
+   {
+    "label": "Brand name embedded in an unofficial domain",
+    "present": true,
+    "weight": -0.0043930929123049125
    }
   ],
   "top": [
    {
-    "token": "engineered__requests_identity_verification",
-    "contribution": 1.3726339439873376
+    "token": "engineered__has_unofficial_url",
+    "contribution": 0.4010833281456064
+   },
+   {
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__this",
-    "contribution": -0.11639877666408141
-   },
-   {
-    "token": "word_tfidf__verify",
-    "contribution": 0.0812745505575113
-   },
-   {
-    "token": "word_tfidf__ecocash",
-    "contribution": -0.08011119687644884
+    "contribution": -0.09217730031363863
    },
    {
     "token": "word_tfidf__to your",
-    "contribution": -0.07066640853070214
+    "contribution": -0.0836533448893411
+   },
+   {
+    "token": "word_tfidf__your",
+    "contribution": -0.04514660574458273
    }
   ],
   "text": "Reactivate your wallet. Copy this to your browser: hxxp://ecocash-verify[.]top/login (remove brackets)",
@@ -725,43 +838,43 @@
   "id": "S16",
   "label": "smish",
   "family": "long-benign-preamble",
-  "pred": "legit",
-  "risk": 0.5222175585949271,
-  "conf": 0.4777824414050729,
+  "pred": "phishing_credential",
+  "risk": 0.6379605617654994,
+  "conf": 0.5939708763182033,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": -0.539050207547357
+    "weight": 0.4010833281456064
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": 0.2660091343063527
    }
   ],
   "top": [
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": -0.539050207547357
+    "contribution": 0.4010833281456064
+   },
+   {
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__secure",
-    "contribution": -0.11602578724235219
+    "contribution": 0.041722309496417864
    },
    {
-    "token": "word_tfidf__customer",
-    "contribution": 0.0984274000702942
-   },
-   {
-    "token": "word_tfidf__using",
-    "contribution": 0.09284129676521845
+    "token": "word_tfidf__the",
+    "contribution": -0.038250079181394156
    },
    {
     "token": "word_tfidf__this",
-    "contribution": 0.09243308629748002
+    "contribution": -0.034569518705584716
    }
   ],
   "text": "Good afternoon valued customer. Thank you for banking with us this year. As part of our annual customer records update, and in line with new regulations, kindly take a moment to confirm your details at your convenience using the secure portal below. https://records-update-zw.online/confirm",
@@ -772,37 +885,47 @@
   "label": "smish",
   "family": "tax-refund",
   "pred": "phishing_credential",
-  "risk": 0.7919533190875044,
-  "conf": 0.6980930411708471,
+  "risk": 0.9685466103044936,
+  "conf": 0.9625527259196206,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -0.8798116057048182
+    "weight": -0.43813640564802026
+   },
+   {
+    "label": "Link goes to a non-official domain",
+    "present": true,
+    "weight": 0.4010833281456064
+   },
+   {
+    "label": "Contains a URL",
+    "present": true,
+    "weight": 0.2660091343063527
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -0.8798116057048182
+    "contribution": -0.43813640564802026
    },
    {
-    "token": "word_tfidf__tax",
-    "contribution": 0.18082064108210114
+    "token": "engineered__has_unofficial_url",
+    "contribution": 0.4010833281456064
+   },
+   {
+    "token": "engineered__has_url",
+    "contribution": 0.2660091343063527
    },
    {
     "token": "word_tfidf__refund of",
-    "contribution": 0.16844352363814807
+    "contribution": 0.07111062144255403
    },
    {
     "token": "word_tfidf__refund",
-    "contribution": 0.14929476775180217
-   },
-   {
-    "token": "word_tfidf__details",
-    "contribution": 0.13025537055795466
+    "contribution": 0.07066120687089679
    }
   ],
   "text": "ZIMRA: You are eligible for a tax refund of USD 418.60 for the 2025 assessment. Submit your bank details to receive payment: zimra-refunds.claim-portal.co",
@@ -812,38 +935,38 @@
   "id": "S18",
   "label": "smish",
   "family": "advance-fee-job",
-  "pred": "legit",
-  "risk": 0.5509169756997352,
-  "conf": 0.44908302430026487,
+  "pred": "other_fraud",
+  "risk": 0.9729398364498799,
+  "conf": 0.9680444430164936,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": 0.14840311834363978
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": 0.14840311834363978
+   },
+   {
+    "token": "word_tfidf__num_token num_token",
+    "contribution": -0.07270353101136458
+   },
+   {
+    "token": "word_tfidf__num_token",
+    "contribution": 0.055697671412990694
    },
    {
     "token": "word_tfidf__fee",
-    "contribution": -0.11521383033500332
+    "contribution": 0.04103815138231091
    },
    {
-    "token": "word_tfidf__the",
-    "contribution": -0.11183908885753763
-   },
-   {
-    "token": "word_tfidf__month",
-    "contribution": 0.08983233560412478
-   },
-   {
-    "token": "word_tfidf__for",
-    "contribution": 0.08899631898930327
+    "token": "word_tfidf__ecocash num_token",
+    "contribution": 0.027244363067643704
    }
   ],
   "text": "Dear applicant, you have been shortlisted for the Data Clerk post (Harare, $650/month). To confirm your interview slot pay the $15 medical screening fee to EcoCash 0716 220 884 and send proof.",
@@ -853,53 +976,58 @@
   "id": "S19",
   "label": "smish",
   "family": "form-harvest",
-  "pred": "prize_scam",
-  "risk": 0.8036710469888256,
-  "conf": 0.6680059961037381,
+  "pred": "other_fraud",
+  "risk": 0.7679393486926231,
+  "conf": 0.7148458697575886,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": 1.6350487487503553
+    "weight": 0.49220459451290466
+   },
+   {
+    "label": "Brand name paired with its own domain or short code",
+    "present": true,
+    "weight": -0.3066641059400204
    },
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": 0.8519931016266795
+    "weight": 0.09637239827264907
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.8009814166538128
+    "weight": 0.03277489768670302
    },
    {
-    "label": "Brand name paired with a suspicious link/shortcode",
+    "label": "Brand name paired with a suspicious link or number",
     "present": true,
-    "weight": -0.15185650136477669
+    "weight": -0.00026907572510399293
    }
   ],
   "top": [
    {
     "token": "engineered__has_shortcode",
-    "contribution": 1.6350487487503553
+    "contribution": 0.49220459451290466
+   },
+   {
+    "token": "engineered__brand_with_trusted_channel",
+    "contribution": -0.3066641059400204
+   },
+   {
+    "token": "word_tfidf__id",
+    "contribution": 0.11787761992010767
    },
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": 0.8519931016266795
+    "contribution": 0.09637239827264907
    },
    {
-    "token": "engineered__has_url",
-    "contribution": 0.8009814166538128
-   },
-   {
-    "token": "word_tfidf__is giving",
-    "contribution": 0.15823634072959825
-   },
-   {
-    "token": "word_tfidf__giving",
-    "contribution": 0.15823634072959825
+    "token": "word_tfidf__register",
+    "contribution": 0.049175452840819804
    }
   ],
   "text": "Nhamo Trust is giving out groceries hampers to 200 families. Register your household using your ID and EcoCash number here: https://forms.gle/9xKq2Lmn4TzP",
@@ -909,43 +1037,43 @@
   "id": "S20",
   "label": "smish",
   "family": "code-mixed-shona",
-  "pred": "phishing_reversal_scam",
-  "risk": 0.9509944903975184,
-  "conf": 0.5466359194792375,
+  "pred": "phishing_credential",
+  "risk": 0.9326460833574485,
+  "conf": 0.514213123754779,
   "flagged": true,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": 2.724119990536273
+    "weight": -0.43813640564802026
    },
    {
     "label": "Urgency language detected",
     "present": true,
-    "weight": 0.860637348184876
+    "weight": 0.2186327365375349
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": 2.724119990536273
+    "contribution": -0.43813640564802026
    },
    {
     "token": "engineered__urgency_word_count",
-    "contribution": 1.721274696369752
+    "contribution": 0.4372654730750698
    },
    {
     "token": "word_tfidf__num_token num_token",
-    "contribution": 0.15202075279309907
+    "contribution": 0.20378913335965673
    },
    {
-    "token": "word_tfidf__ndapota",
-    "contribution": 0.10300596698768535
+    "token": "word_tfidf__account",
+    "contribution": 0.061447948025446564
    },
    {
-    "token": "char_tfidf__ nda",
-    "contribution": 0.06667349975649428
+    "token": "word_tfidf__num_token",
+    "contribution": 0.0405757747836173
    }
   ],
   "text": "Mhoro, ndini wako. Ndarasika nefone yangu, ndakabhadhara $80 pa account yako nekukanganisa. Ndapota tumira kuna 0778 341 209 nhasi. Thanks.",
@@ -956,42 +1084,52 @@
   "label": "genuine",
   "family": "real-transaction",
   "pred": "legit",
-  "risk": 0.020018968454244668,
-  "conf": 0.9799810315457553,
+  "risk": 0.006000690422728994,
+  "conf": 0.993999309577271,
   "flagged": false,
   "correct": true,
   "signals": [
    {
+    "label": "Includes a machine-generated reference number",
+    "present": true,
+    "weight": 0.5978147264324708
+   },
+   {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    },
    {
     "label": "Contains a full phone number",
     "present": true,
-    "weight": 0.7397554486176249
+    "weight": -0.14028690798487645
+   },
+   {
+    "label": "Brand name paired with a suspicious link or number",
+    "present": true,
+    "weight": -0.0036739915386776686
    }
   ],
   "top": [
    {
+    "token": "engineered__has_transaction_reference",
+    "contribution": 0.5978147264324708
+   },
+   {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": -0.31111146685819774
    },
    {
     "token": "engineered__has_full_number",
-    "contribution": 0.7397554486176249
+    "contribution": -0.14028690798487645
    },
    {
-    "token": "word_tfidf__ref",
-    "contribution": 0.14490325939521093
+    "token": "word_tfidf__balance currency_amount_token",
+    "contribution": 0.07893132760395254
    },
    {
-    "token": "word_tfidf__ref tracking_id_token",
-    "contribution": 0.14490325939521093
-   },
-   {
-    "token": "word_tfidf__balance",
-    "contribution": 0.13839226946598493
+    "token": "word_tfidf__fee",
+    "contribution": -0.06537501390653551
    }
   ],
   "text": "EcoCash: Confirmed. You have sent $45.00 to 0772134556 TENDAI MOYO. Fee $0.45. New balance $112.30. Ref MP250817.1432.K84210",
@@ -1002,37 +1140,37 @@
   "label": "genuine",
   "family": "real-otp",
   "pred": "legit",
-  "risk": 0.3872161796740895,
-  "conf": 0.6127838203259105,
+  "risk": 0.08852645982086094,
+  "conf": 0.9114735401791391,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Urgency language detected",
     "present": true,
-    "weight": -1.022815029314067
+    "weight": -0.2544692080738933
    }
   ],
   "top": [
    {
     "token": "engineered__urgency_word_count",
-    "contribution": -1.022815029314067
+    "contribution": -0.2544692080738933
    },
    {
     "token": "word_tfidf__code",
-    "contribution": -0.1211321061663872
+    "contribution": -0.059847882250626
    },
    {
-    "token": "word_tfidf__this",
-    "contribution": 0.09834310399570466
+    "token": "word_tfidf__in minutes",
+    "contribution": -0.049181632309358896
    },
    {
-    "token": "word_tfidf__do not",
-    "contribution": 0.08798740122012134
+    "token": "word_tfidf__anyone",
+    "contribution": 0.0338674394326656
    },
    {
-    "token": "word_tfidf__do",
-    "contribution": 0.08798740122012134
+    "token": "word_tfidf__not share",
+    "contribution": 0.0338674394326656
    }
   ],
   "text": "Your Steward Bank verification code is 739104. Do not share this code with anyone, including bank staff. Expires in 5 minutes.",
@@ -1043,42 +1181,47 @@
   "label": "genuine",
   "family": "utility-token",
   "pred": "legit",
-  "risk": 0.08793560416078594,
-  "conf": 0.9120643958392141,
+  "risk": 0.02429739155001953,
+  "conf": 0.9757026084499805,
   "flagged": false,
   "correct": true,
   "signals": [
    {
+    "label": "Includes a machine-generated reference number",
+    "present": true,
+    "weight": 0.5978147264324708
+   },
+   {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    },
    {
     "label": "Contains a full phone number",
     "present": true,
-    "weight": 0.7397554486176249
+    "weight": -0.14028690798487645
    }
   ],
   "top": [
    {
+    "token": "engineered__has_transaction_reference",
+    "contribution": 0.5978147264324708
+   },
+   {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": -0.31111146685819774
    },
    {
     "token": "engineered__has_full_number",
-    "contribution": 0.7397554486176249
+    "contribution": -0.14028690798487645
    },
    {
     "token": "word_tfidf__num_token num_token",
-    "contribution": -0.09675742105948969
+    "contribution": -0.13544030196717188
    },
    {
-    "token": "word_tfidf__successful",
-    "contribution": 0.07857774867887768
-   },
-   {
-    "token": "char_tfidf__ . ",
-    "contribution": 0.04431010776165499
+    "token": "word_tfidf__num_token",
+    "contribution": -0.12011242383594252
    }
   ],
   "text": "ZESA Prepaid: Purchase successful. Token 4521 8873 0094 6612 3380. Units 42.6 kWh. Amount $12.00. Meter 37201884556.",
@@ -1089,47 +1232,47 @@
   "label": "genuine",
   "family": "school-fees",
   "pred": "legit",
-  "risk": 0.7030924004083847,
-  "conf": 0.2969075995916153,
-  "flagged": true,
-  "correct": false,
+  "risk": 0.38998782192599046,
+  "conf": 0.6100121780740095,
+  "flagged": false,
+  "correct": true,
   "signals": [
-   {
-    "label": "Mentions a currency amount",
-    "present": true,
-    "weight": -1.525533722114517
-   },
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": -1.4101319493221482
+    "weight": -0.3316565433120573
    },
    {
-    "label": "Brand name paired with a suspicious link/shortcode",
+    "label": "Mentions a currency amount",
     "present": true,
-    "weight": 0.3666223480901034
+    "weight": -0.31111146685819774
+   },
+   {
+    "label": "Brand name paired with its own domain or short code",
+    "present": true,
+    "weight": 0.11941741523086354
    }
   ],
   "top": [
    {
-    "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
-   },
-   {
     "token": "engineered__has_shortcode",
-    "contribution": -1.4101319493221482
+    "contribution": -0.3316565433120573
    },
    {
-    "token": "engineered__brand_spoof_indicator",
-    "contribution": 0.3666223480901034
+    "token": "engineered__has_currency_amount",
+    "contribution": -0.31111146685819774
    },
    {
-    "token": "word_tfidf__on",
-    "contribution": 0.10363728708278956
+    "token": "engineered__brand_with_trusted_channel",
+    "contribution": 0.11941741523086354
    },
    {
-    "token": "word_tfidf__for",
-    "contribution": 0.08402092500627194
+    "token": "word_tfidf__num_token",
+    "contribution": -0.07680946467008269
+   },
+   {
+    "token": "word_tfidf__num_token num_token",
+    "contribution": -0.07217611049032735
    }
   ],
   "text": "Chisipite Senior School: Fees for Term 3 ($420) are due by 29 August. Pay via ZIPIT to 0331 4478 2201 or at the bursar's office. Statements available on request.",
@@ -1140,37 +1283,37 @@
   "label": "genuine",
   "family": "telco-promo",
   "pred": "legit",
-  "risk": 0.3411293142534506,
-  "conf": 0.6588706857465494,
+  "risk": 0.26985739707751843,
+  "conf": 0.7301426029224816,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": -0.31111146685819774
    },
    {
     "token": "word_tfidf__reply",
-    "contribution": -0.16120546867558294
+    "contribution": -0.08577890717701593
    },
    {
-    "token": "word_tfidf__dial",
-    "contribution": 0.14119880521110914
-   },
-   {
-    "token": "word_tfidf__dial num_token",
-    "contribution": 0.14119880521110914
+    "token": "word_tfidf__to",
+    "contribution": -0.0643546630149739
    },
    {
     "token": "word_tfidf__for",
-    "contribution": 0.12143801752879202
+    "contribution": 0.06061922122158895
+   },
+   {
+    "token": "word_tfidf__for currency_amount_token",
+    "contribution": 0.05243328041657243
    }
   ],
   "text": "NetOne: Get 2GB for $2 valid 7 days. Dial *171# to buy. T&Cs apply. To opt out of promotional messages reply STOP.",
@@ -1181,47 +1324,47 @@
   "label": "genuine",
   "family": "real-courier",
   "pred": "legit",
-  "risk": 0.2996882863548316,
-  "conf": 0.7003117136451684,
+  "risk": 0.05012342678955428,
+  "conf": 0.9498765732104457,
   "flagged": false,
   "correct": true,
   "signals": [
    {
-    "label": "Contains a full phone number",
+    "label": "Includes a machine-generated reference number",
     "present": true,
-    "weight": 0.7397554486176249
-   },
-   {
-    "label": "Link goes to a non-official domain",
-    "present": true,
-    "weight": -0.539050207547357
+    "weight": 0.5978147264324708
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": -0.17961012500735773
+   },
+   {
+    "label": "Contains a full phone number",
+    "present": true,
+    "weight": -0.14028690798487645
    }
   ],
   "top": [
    {
-    "token": "engineered__has_full_number",
-    "contribution": 0.7397554486176249
+    "token": "engineered__has_transaction_reference",
+    "contribution": 0.5978147264324708
    },
    {
-    "token": "engineered__has_unofficial_url",
-    "contribution": -0.539050207547357
+    "token": "engineered__has_url",
+    "contribution": -0.17961012500735773
+   },
+   {
+    "token": "engineered__has_full_number",
+    "contribution": -0.14028690798487645
    },
    {
     "token": "word_tfidf__track",
-    "contribution": 0.11212742437950508
+    "contribution": 0.11839065807954892
    },
    {
-    "token": "word_tfidf__for",
-    "contribution": 0.10467067031267624
-   },
-   {
-    "token": "word_tfidf__and",
-    "contribution": -0.06020631895550362
+    "token": "word_tfidf__at url_token",
+    "contribution": 0.054005473832743574
    }
   ],
   "text": "DHL: Your shipment 8842019773 is out for delivery today between 10:00 and 14:00. Track at https://www.dhl.com/zw-en/home/tracking.html",
@@ -1232,37 +1375,37 @@
   "label": "genuine",
   "family": "appointment",
   "pred": "legit",
-  "risk": 0.40471651387747254,
-  "conf": 0.5952834861225275,
+  "risk": 0.3580077678670187,
+  "conf": 0.6419922321329813,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": -1.4101319493221482
+    "weight": -0.3316565433120573
    }
   ],
   "top": [
    {
     "token": "engineered__has_shortcode",
-    "contribution": -1.4101319493221482
+    "contribution": -0.3316565433120573
+   },
+   {
+    "token": "word_tfidf__num_token",
+    "contribution": -0.07811744609434568
+   },
+   {
+    "token": "word_tfidf__num_token num_token",
+    "contribution": -0.07340519094548215
+   },
+   {
+    "token": "word_tfidf__at",
+    "contribution": 0.04090327790543457
    },
    {
     "token": "word_tfidf__on",
-    "contribution": 0.11006942101861861
-   },
-   {
-    "token": "word_tfidf__reminder",
-    "contribution": 0.07260821966066996
-   },
-   {
-    "token": "word_tfidf__reminder your",
-    "contribution": 0.06705517417002442
-   },
-   {
-    "token": "word_tfidf__please",
-    "contribution": -0.05686933635697472
+    "contribution": 0.03753611208855104
    }
   ],
   "text": "Reminder: your appointment with Dr Chikwava is on Tue 19 Aug at 09:30, Avenues Clinic. Please arrive 15 min early. Call 0242 251 555 to reschedule.",
@@ -1273,42 +1416,42 @@
   "label": "genuine",
   "family": "bank-marketing",
   "pred": "legit",
-  "risk": 0.33537090079492504,
-  "conf": 0.664629099205075,
+  "risk": 0.26939741002145623,
+  "conf": 0.7306025899785438,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": -0.17961012500735773
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
-   },
-   {
-    "token": "word_tfidf__for",
-    "contribution": 0.11888412053833693
-   },
-   {
-    "token": "word_tfidf__any",
-    "contribution": 0.06885607481513767
+    "contribution": -0.31111146685819774
    },
    {
     "token": "engineered__has_url",
-    "contribution": -0.04814245340336408
+    "contribution": -0.17961012500735773
    },
    {
-    "token": "word_tfidf__branch",
-    "contribution": 0.04130849833320322
+    "token": "word_tfidf__at url_token",
+    "contribution": 0.07407243468456379
+   },
+   {
+    "token": "word_tfidf__any",
+    "contribution": 0.06468972593180874
+   },
+   {
+    "token": "word_tfidf__for",
+    "contribution": 0.06047365433285291
    }
   ],
   "text": "CBZ Bank: Apply for a personal loan up to $5,000 with repayment over 24 months. Learn more at https://www.cbz.co.zw/personal-loans or visit any branch.",
@@ -1319,31 +1462,31 @@
   "label": "genuine",
   "family": "payroll",
   "pred": "legit",
-  "risk": 0.28676151384184434,
-  "conf": 0.7132384861581557,
+  "risk": 0.06931042182964897,
+  "conf": 0.930689578170351,
   "flagged": false,
   "correct": true,
   "signals": [],
   "top": [
    {
     "token": "word_tfidf__on",
-    "contribution": 0.1316788362799686
+    "contribution": 0.04798801886405889
    },
    {
-    "token": "word_tfidf__co",
-    "contribution": -0.1103038169905105
+    "token": "word_tfidf__have been",
+    "contribution": -0.03897838214550298
+   },
+   {
+    "token": "word_tfidf__your account",
+    "contribution": 0.03820121904733395
    },
    {
     "token": "word_tfidf__in your",
-    "contribution": 0.09420749023755635
+    "contribution": 0.03805909133822318
    },
    {
     "token": "word_tfidf__contact",
-    "contribution": 0.09253489084059496
-   },
-   {
-    "token": "word_tfidf__are",
-    "contribution": -0.07211754930487614
+    "contribution": 0.026327594879387503
    }
   ],
   "text": "Payroll notice: August salaries have been processed and will reflect in your account by 25/08. Payslips are on the HR portal. Contact payroll@company.co.zw with queries.",
@@ -1353,43 +1496,43 @@
   "id": "G10",
   "label": "genuine",
   "family": "community-money",
-  "pred": "phishing_reversal_scam",
-  "risk": 0.8819661606392502,
-  "conf": 0.30376267376712984,
+  "pred": "other_fraud",
+  "risk": 0.6120664344738805,
+  "conf": 0.4894528929107743,
   "flagged": true,
   "correct": false,
   "signals": [
    {
-    "label": "Mentions a currency amount",
-    "present": true,
-    "weight": 2.724119990536273
-   },
-   {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": 0.8794397792751221
+    "weight": 0.49220459451290466
+   },
+   {
+    "label": "Mentions a currency amount",
+    "present": true,
+    "weight": 0.14840311834363978
    }
   ],
   "top": [
    {
-    "token": "engineered__has_currency_amount",
-    "contribution": 2.724119990536273
-   },
-   {
     "token": "engineered__has_shortcode",
-    "contribution": 0.8794397792751221
+    "contribution": 0.49220459451290466
    },
    {
-    "token": "word_tfidf__please send",
-    "contribution": 0.12552953958996774
-   },
-   {
-    "token": "word_tfidf__please",
-    "contribution": 0.11566942657858516
+    "token": "engineered__has_currency_amount",
+    "contribution": 0.14840311834363978
    },
    {
     "token": "word_tfidf__num_token num_token",
-    "contribution": 0.104517349042921
+    "contribution": -0.11905244592308681
+   },
+   {
+    "token": "word_tfidf__num_token",
+    "contribution": 0.09120525401854862
+   },
+   {
+    "token": "word_tfidf__family",
+    "contribution": -0.04282560467686221
    }
   ],
   "text": "Good evening family. The funeral contribution is $10 per household. Please send to Aunt Rudo on 0772 884 110 before Friday so we can finalise arrangements. Thank you.",
@@ -1400,42 +1543,37 @@
   "label": "genuine",
   "family": "tax-legit",
   "pred": "legit",
-  "risk": 0.5145932814762614,
-  "conf": 0.4854067185237386,
-  "flagged": true,
-  "correct": false,
+  "risk": 0.1688213553047998,
+  "conf": 0.8311786446952002,
+  "flagged": false,
+  "correct": true,
   "signals": [
-   {
-    "label": "Link goes to a non-official domain",
-    "present": true,
-    "weight": -0.539050207547357
-   },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": -0.17961012500735773
    }
   ],
   "top": [
    {
-    "token": "engineered__has_unofficial_url",
-    "contribution": -0.539050207547357
+    "token": "engineered__has_url",
+    "contribution": -0.17961012500735773
    },
    {
     "token": "word_tfidf__using",
-    "contribution": 0.11389597823179261
+    "contribution": 0.0867880974905753
    },
    {
-    "token": "word_tfidf__it",
-    "contribution": 0.07852852015080047
+    "token": "word_tfidf__at url_token",
+    "contribution": 0.05532910664067556
    },
    {
-    "token": "word_tfidf__tax",
-    "contribution": -0.07250200107497909
+    "token": "word_tfidf__2025",
+    "contribution": 0.054514318085867805
    },
    {
-    "token": "word_tfidf__been approved",
-    "contribution": -0.0700744443819746
+    "token": "word_tfidf__using your",
+    "contribution": 0.05396589116298199
    }
   ],
   "text": "ZIMRA: Your 2025 ITF263 tax clearance certificate has been approved. Download it from the eServices portal at https://efiling.zimra.co.zw using your usual login.",
@@ -1446,42 +1584,42 @@
   "label": "genuine",
   "family": "fraud-warning",
   "pred": "legit",
-  "risk": 0.38780554419991853,
-  "conf": 0.6121944558000815,
+  "risk": 0.2002818351953548,
+  "conf": 0.7997181648046452,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Contains a short-code number",
     "present": true,
-    "weight": -1.4101319493221482
+    "weight": -0.3316565433120573
    },
    {
-    "label": "Brand name paired with a suspicious link/shortcode",
+    "label": "Brand name paired with its own domain or short code",
     "present": true,
-    "weight": 0.3666223480901034
+    "weight": 0.11941741523086354
    }
   ],
   "top": [
    {
     "token": "engineered__has_shortcode",
-    "contribution": -1.4101319493221482
+    "contribution": -0.3316565433120573
    },
    {
-    "token": "engineered__brand_spoof_indicator",
-    "contribution": 0.3666223480901034
+    "token": "engineered__brand_with_trusted_channel",
+    "contribution": 0.11941741523086354
+   },
+   {
+    "token": "word_tfidf__to",
+    "contribution": -0.034513984564038806
    },
    {
     "token": "word_tfidf__for",
-    "contribution": 0.060480597821074046
+    "contribution": 0.0325106335346541
    },
    {
-    "token": "word_tfidf__never",
-    "contribution": 0.051004097810215
-   },
-   {
-    "token": "char_tfidf__or ",
-    "contribution": 0.04455859098954254
+    "token": "word_tfidf__you to",
+    "contribution": -0.022267170576822586
    }
   ],
   "text": "EcoCash Security Alert: We will never call or SMS you to ask for your PIN or a one-time code. If someone does, hang up and report to 114.",
@@ -1492,37 +1630,42 @@
   "label": "genuine",
   "family": "insurance",
   "pred": "legit",
-  "risk": 0.2678294486608984,
-  "conf": 0.7321705513391016,
+  "risk": 0.007349160093420459,
+  "conf": 0.9926508399065795,
   "flagged": false,
   "correct": true,
   "signals": [
    {
+    "label": "Includes a machine-generated reference number",
+    "present": true,
+    "weight": 0.5978147264324708
+   },
+   {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    }
   ],
   "top": [
    {
+    "token": "engineered__has_transaction_reference",
+    "contribution": 0.5978147264324708
+   },
+   {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": -0.31111146685819774
    },
    {
-    "token": "word_tfidf__on",
-    "contribution": 0.12082257536223925
+    "token": "word_tfidf__any",
+    "contribution": 0.04501947248011807
    },
    {
-    "token": "word_tfidf__of currency_amount_token",
-    "contribution": 0.1024175923212085
+    "token": "word_tfidf__or at",
+    "contribution": 0.043191490241564656
    },
    {
-    "token": "word_tfidf__is due",
-    "contribution": 0.0736060820490317
-   },
-   {
-    "token": "word_tfidf__policy",
-    "contribution": -0.07089889032693575
+    "token": "word_tfidf__at",
+    "contribution": 0.041962603993225336
    }
   ],
   "text": "Nyaradzo: Your monthly policy premium of $8.50 is due on 20 August. Pay via EcoCash Biller Code 011977 or at any branch. Policy NY-447120.",
@@ -1533,31 +1676,31 @@
   "label": "genuine",
   "family": "2fa-google",
   "pred": "legit",
-  "risk": 0.3289925340122226,
-  "conf": 0.6710074659877774,
+  "risk": 0.08215927952038071,
+  "conf": 0.9178407204796193,
   "flagged": false,
   "correct": true,
   "signals": [],
   "top": [
    {
     "token": "word_tfidf__code",
-    "contribution": -0.13691410928082515
+    "contribution": -0.06072608111576957
    },
    {
     "token": "word_tfidf__google",
-    "contribution": 0.08778616672121739
+    "contribution": 0.05204828562528681
    },
    {
     "token": "word_tfidf__is",
-    "contribution": 0.07536068053370036
+    "contribution": 0.03031733337111942
    },
    {
-    "token": "word_tfidf__verification",
-    "contribution": -0.05794484203429532
+    "token": "word_tfidf__your",
+    "contribution": 0.012455432835246144
    },
    {
-    "token": "word_tfidf__verification code",
-    "contribution": -0.032615720850913056
+    "token": "char_tfidf__ cod",
+    "contribution": -0.008095525050609278
    }
   ],
   "text": "G-618402 is your Google verification code.",
@@ -1568,37 +1711,42 @@
   "label": "genuine",
   "family": "agent-float",
   "pred": "legit",
-  "risk": 0.040854627523562725,
-  "conf": 0.9591453724764373,
+  "risk": 0.01001377596216868,
+  "conf": 0.9899862240378313,
   "flagged": false,
   "correct": true,
   "signals": [
    {
+    "label": "Includes a machine-generated reference number",
+    "present": true,
+    "weight": 0.5978147264324708
+   },
+   {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    }
   ],
   "top": [
    {
+    "token": "engineered__has_transaction_reference",
+    "contribution": 0.5978147264324708
+   },
+   {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
+    "contribution": -0.31111146685819774
    },
    {
-    "token": "word_tfidf__ref tracking_id_token",
-    "contribution": 0.13552110675609522
+    "token": "word_tfidf__top",
+    "contribution": 0.04782908184762095
    },
    {
-    "token": "word_tfidf__ref",
-    "contribution": 0.13552110675609522
+    "token": "word_tfidf__num_token",
+    "contribution": -0.04734729886476261
    },
    {
-    "token": "word_tfidf__tracking_id_token",
-    "contribution": 0.12710639541727467
-   },
-   {
-    "token": "word_tfidf__was",
-    "contribution": 0.09685789443145781
+    "token": "word_tfidf__float",
+    "contribution": 0.040178585564646076
    }
   ],
   "text": "EcoCash Agent: Your float top-up of $500.00 was successful. Agent code 4471. Available float $612.40. Ref AG250817.0918.T2210",
@@ -1608,43 +1756,38 @@
   "id": "G16",
   "label": "genuine",
   "family": "university",
-  "pred": "phishing_credential",
-  "risk": 0.5844615634099642,
-  "conf": 0.44587256976475254,
-  "flagged": true,
-  "correct": false,
+  "pred": "legit",
+  "risk": 0.13345699634071162,
+  "conf": 0.8665430036592884,
+  "flagged": false,
+  "correct": true,
   "signals": [
-   {
-    "label": "Link goes to a non-official domain",
-    "present": true,
-    "weight": 0.6250269640874083
-   },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": 0.4193793951994854
+    "weight": -0.17961012500735773
    }
   ],
   "top": [
    {
-    "token": "engineered__has_unofficial_url",
-    "contribution": 0.6250269640874083
-   },
-   {
     "token": "engineered__has_url",
-    "contribution": 0.4193793951994854
+    "contribution": -0.17961012500735773
    },
    {
-    "token": "word_tfidf__be",
-    "contribution": 0.09271655657131768
+    "token": "word_tfidf__outstanding",
+    "contribution": 0.06362355174746431
    },
    {
-    "token": "word_tfidf__not",
-    "contribution": 0.08151108702426679
+    "token": "word_tfidf__zimbabwe",
+    "contribution": 0.05804391220117688
    },
    {
-    "token": "word_tfidf__will",
-    "contribution": 0.07565700950153594
+    "token": "word_tfidf__for",
+    "contribution": 0.056557446254001775
+   },
+   {
+    "token": "word_tfidf__fees",
+    "contribution": 0.04379228538725801
    }
   ],
   "text": "University of Zimbabwe: Registration for Semester 1 closes 31 August. Students with outstanding fees will not be registered. Portal: https://elearning.uz.ac.zw/registration",
@@ -1655,31 +1798,31 @@
   "label": "genuine",
   "family": "telco-maintenance",
   "pred": "legit",
-  "risk": 0.03566666287010034,
-  "conf": 0.9643333371298997,
+  "risk": 0.020542791472833555,
+  "conf": 0.9794572085271664,
   "flagged": false,
   "correct": true,
   "signals": [],
   "top": [
    {
+    "token": "word_tfidf__for",
+    "contribution": 0.04459332214025598
+   },
+   {
     "token": "word_tfidf__on",
-    "contribution": 0.15956436496246976
+    "contribution": 0.04080300316961737
    },
    {
     "token": "word_tfidf__network",
-    "contribution": 0.13200749987495808
+    "contribution": 0.029312852454120072
    },
    {
-    "token": "word_tfidf__for",
-    "contribution": 0.12936218150399134
+    "token": "word_tfidf__for the",
+    "contribution": -0.026242379780541246
    },
    {
     "token": "word_tfidf__the",
-    "contribution": -0.08128284785446419
-   },
-   {
-    "token": "word_tfidf__maintenance",
-    "contribution": 0.07592778877998019
+    "contribution": -0.01740366206256448
    }
   ],
   "text": "Econet: Scheduled network maintenance in Bulawayo on 18 Aug, 01:00-04:00. You may experience brief service interruptions. We apologise for the inconvenience.",
@@ -1690,37 +1833,37 @@
   "label": "genuine",
   "family": "dispute-followup",
   "pred": "legit",
-  "risk": 0.2803495107780073,
-  "conf": 0.7196504892219927,
+  "risk": 0.08680577032515657,
+  "conf": 0.9131942296748434,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
-   },
-   {
-    "token": "word_tfidf__this",
-    "contribution": 0.09503522525520067
-   },
-   {
-    "token": "word_tfidf__do",
-    "contribution": 0.08502784796114606
-   },
-   {
-    "token": "word_tfidf__do not",
-    "contribution": 0.08502784796114606
+    "contribution": -0.31111146685819774
    },
    {
     "token": "word_tfidf__for",
-    "contribution": 0.08268770223638126
+    "contribution": 0.0446408418964758
+   },
+   {
+    "token": "word_tfidf__for currency_amount_token",
+    "contribution": 0.038612600657366825
+   },
+   {
+    "token": "word_tfidf__currency_amount_token is",
+    "contribution": 0.03754785343040348
+   },
+   {
+    "token": "word_tfidf__within",
+    "contribution": -0.03689912649169423
    }
   ],
   "text": "Your reversal request REV-88214 for $60.00 is being processed. You will be notified within 48 hours. Do not share your PIN with anyone during this process.",
@@ -1731,47 +1874,47 @@
   "label": "genuine",
   "family": "shortlink-legit",
   "pred": "legit",
-  "risk": 0.4380948826431479,
-  "conf": 0.5619051173568521,
+  "risk": 0.1423198979492133,
+  "conf": 0.8576801020507867,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Link goes to a non-official domain",
     "present": true,
-    "weight": -0.539050207547357
-   },
-   {
-    "label": "Link uses a URL shortener",
-    "present": true,
-    "weight": -0.4688671831556313
+    "weight": -0.5654471738817952
    },
    {
     "label": "Contains a URL",
     "present": true,
-    "weight": -0.04814245340336408
+    "weight": -0.17961012500735773
+   },
+   {
+    "label": "Link uses a URL shortener",
+    "present": true,
+    "weight": -0.0247805166549246
    }
   ],
   "top": [
    {
     "token": "engineered__has_unofficial_url",
-    "contribution": -0.539050207547357
+    "contribution": -0.5654471738817952
    },
    {
-    "token": "engineered__has_shortener_url",
-    "contribution": -0.4688671831556313
+    "token": "engineered__has_url",
+    "contribution": -0.17961012500735773
    },
    {
     "token": "word_tfidf__view",
-    "contribution": 0.0920452386810998
+    "contribution": 0.07726417494103413
    },
    {
-    "token": "word_tfidf__it",
-    "contribution": 0.0818809769991362
+    "token": "word_tfidf__ready view",
+    "contribution": 0.06249956461917782
    },
    {
-    "token": "word_tfidf__statement",
-    "contribution": 0.0687630119753059
+    "token": "word_tfidf__view it",
+    "contribution": 0.06249956461917782
    }
   ],
   "text": "Old Mutual Zimbabwe: your annual statement is ready. View it in the app or at https://bit.ly/OMZW-statements",
@@ -1782,37 +1925,37 @@
   "label": "genuine",
   "family": "cash-in",
   "pred": "legit",
-  "risk": 0.044922089914940955,
-  "conf": 0.955077910085059,
+  "risk": 0.07612065104728827,
+  "conf": 0.9238793489527117,
   "flagged": false,
   "correct": true,
   "signals": [
    {
     "label": "Mentions a currency amount",
     "present": true,
-    "weight": -1.525533722114517
+    "weight": -0.31111146685819774
    }
   ],
   "top": [
    {
     "token": "engineered__has_currency_amount",
-    "contribution": -1.525533722114517
-   },
-   {
-    "token": "word_tfidf__balance",
-    "contribution": 0.16513231292571068
+    "contribution": -0.31111146685819774
    },
    {
     "token": "word_tfidf__using",
-    "contribution": 0.1252613206199357
+    "contribution": 0.09543907530189404
    },
    {
-    "token": "word_tfidf__was",
-    "contribution": 0.1235738197106017
+    "token": "word_tfidf__balance currency_amount_token",
+    "contribution": 0.09474183878476981
    },
    {
-    "token": "word_tfidf__of currency_amount_token",
-    "contribution": 0.11345264062858884
+    "token": "word_tfidf__balance",
+    "contribution": 0.07358142944798521
+   },
+   {
+    "token": "word_tfidf__for",
+    "contribution": 0.04967401981173385
    }
   ],
   "text": "EcoCash: Cash In of $200.00 from Agent 30471 SUNRISE SUPERMARKET was successful. New balance $243.85. Thank you for using EcoCash.",

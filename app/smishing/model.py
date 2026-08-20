@@ -34,19 +34,32 @@ def load_model(path: str):
     return joblib.load(path)
 
 
+def _coef(clf):
+    """Coefficients for explainability. CalibratedClassifierCV has no coef_ of
+    its own; average the per-fold base LinearSVC coefficients (same class
+    order). Returns None for anything genuinely uninspectable."""
+    if hasattr(clf, "coef_"):
+        return clf.coef_
+    folds = getattr(clf, "calibrated_classifiers_", None)
+    if folds and all(hasattr(f.estimator, "coef_") for f in folds):
+        return np.mean([f.estimator.coef_ for f in folds], axis=0)
+    return None
+
+
 def _top_tokens(pipeline, text: str, top_n: int = 5) -> list[dict]:
     """Coefficient-inspection explainability: which TF-IDF/engineered
     features contributed most to the predicted class for this message."""
     features_step = pipeline.named_steps["features"]
     clf = pipeline.named_steps["clf"]
-    if not hasattr(clf, "coef_"):
+    coef = _coef(clf)
+    if coef is None:
         return []
 
     x = features_step.transform([text])
     x_dense = x.toarray()[0] if hasattr(x, "toarray") else np.asarray(x)[0]
     feature_names = features_step.get_feature_names_out()
     predicted_idx = list(clf.classes_).index(pipeline.predict([text])[0])
-    contributions = x_dense * clf.coef_[predicted_idx]
+    contributions = x_dense * coef[predicted_idx]
 
     top_idx = np.argsort(np.abs(contributions))[::-1][:top_n]
     return [
@@ -65,7 +78,8 @@ def _risk_signals(pipeline, text: str) -> list[dict]:
     "why legit" in terms of risk signals that were checked and not found."""
     features_step = pipeline.named_steps["features"]
     clf = pipeline.named_steps["clf"]
-    if not hasattr(clf, "coef_"):
+    coef = _coef(clf)
+    if coef is None:
         return []
 
     feature_names = features_step.get_feature_names_out()
@@ -83,7 +97,7 @@ def _risk_signals(pipeline, text: str) -> list[dict]:
         signal = {
             "label": FEATURE_LABELS.get(name, name),
             "present": present,
-            "weight": float(clf.coef_[predicted_idx][i]),
+            "weight": float(coef[predicted_idx][i]),
         }
         # requests_* features need an actual request, not just the keyword (see
         # features.py) — "your password was changed" and "we will never ask for
