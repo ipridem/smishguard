@@ -242,6 +242,7 @@ APPROVAL_CUES = [
 SCREEN_PROMPT_WORDS = [
     "screen", "prompt", "notification", "pop-up", "popup", "in the app",
     "security alert", "alert", "notice",
+    "pending request", "payment request", "reversal request",
 ]
 # A quoted button/dialog label immediately followed by "appears" IS a prompt
 # reference, regardless of whether the message ever says "screen"/"prompt" —
@@ -256,7 +257,7 @@ SCREEN_MISMATCH_CUES = [
 # refer/mention/read/list X" is the mismatch PREDICTION, in any wording.
 MISMATCH_PREDICTION_RE = re.compile(
     r"\b(?:may|might|could)\b(?:\s+\w+){0,2}\s+"
-    r"(?:appear|show|display|read|list|reflect|refer|mention|say)\b",
+    r"(?:appear|show|display|read|list|reflect|refer|mention|say|differ)\b",
     re.IGNORECASE,
 )
 # "this is normal/expected/part of X" excuses the mismatch instead of naming
