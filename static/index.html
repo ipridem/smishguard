@@ -4,108 +4,151 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SmishGuard — SMS smishing classifier</title>
-  <meta name="description" content="Classify an SMS as legitimate or one of six fraud categories, with the full risk-signal readout behind the verdict.">
+  <meta name="description" content="Paste an SMS and see the verdict, the risk score, and all twenty signals the model checked — including the ones that did not fire.">
+  <meta name="color-scheme" content="light">
+  <!-- Drop is resolved before first paint so the canvas never flashes. -->
+  <script>
+    try {
+      var d = localStorage.getItem("sg-drop");
+      if (d === "night" || d === "day") document.documentElement.dataset.drop = d;
+    } catch (e) { /* private mode - day is the default anyway */ }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<nav class="nav">
-  <div class="shell nav__inner">
-    <div class="nav__mark">
-      <span class="nav__word">SmishGuard</span>
-      <span class="mono-label nav__tag">Smishing classifier</span>
-    </div>
-    <a class="nav__link" href="/docs">API docs&nbsp;&#8599;</a>
-  </div>
-</nav>
-
-<header class="header">
-  <div class="shell header__grid">
-    <h1>Classify an SMS.<br>See the reasoning.</h1>
-    <p class="header__lede">
-      Paste a message and get a risk score, its closest label, and every risk signal
-      the model checked — <strong>including the ones it didn&rsquo;t find</strong>. Trained on
-      Zimbabwean mobile-money, SIM-registration and delivery-scam patterns.
-    </p>
+<!-- N9 · edge-aligned minimal: wordmark hard-left, controls hard-right, nothing between -->
+<header class="nav-edge">
+  <a class="wordmark" href="/">smishguard</a>
+  <div class="nav-edge__side">
+    <button class="drop-toggle" id="drop-toggle" type="button" aria-pressed="false">
+      <span class="drop-toggle__dot" aria-hidden="true"></span>
+      <span class="drop-toggle__text" id="drop-toggle-text">night</span>
+    </button>
+    <a class="nav-edge__link" href="/docs">api docs</a>
   </div>
 </header>
 
-<div class="shell workspace">
-<main class="bench">
-  <div class="shell">
-    <div class="tabs" role="tablist" aria-label="Input mode">
-      <button class="tab" role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true" type="button">Single message</button>
-      <button class="tab" role="tab" id="tab-batch" aria-controls="panel-batch" aria-selected="false" type="button">CSV batch</button>
+<main>
+
+  <!-- Hero — the bench is the fold -->
+  <section class="hero">
+    <div class="hero__inner">
+
+      <div class="hero__lead">
+        <p class="eyebrow">00 · classifier</p>
+        <h1 class="hero__title">paste the message.<br>then <em>see</em> what the model saw.</h1>
+        <p class="hero__lede">
+          twenty engineered signals, each reported whether it fired or not, with the
+          weight the model learned for it. trained on zimbabwean mobile-money,
+          sim-registration and delivery-scam traffic.
+        </p>
+
+        <div class="bench">
+          <div class="tabs" role="tablist" aria-label="Input mode">
+            <button class="tab" role="tab" id="tab-single" aria-controls="panel-single" aria-selected="true" type="button">single message</button>
+            <button class="tab" role="tab" id="tab-batch" aria-controls="panel-batch" aria-selected="false" type="button">csv batch</button>
+          </div>
+
+          <section class="panel" id="panel-single" role="tabpanel" aria-labelledby="tab-single">
+            <form id="single-form" novalidate>
+              <label class="field">
+                <span class="field__label">sms text</span>
+                <textarea class="input" id="sms-text" name="text" rows="5" maxlength="2000"
+                  placeholder="Ndapota confirmai PIN yenyu pa http://ecocash-verify.tk/x9k2 kuti musarasikirwe nemari yenyu."
+                  aria-describedby="single-hint"></textarea>
+              </label>
+              <div class="bench__actions">
+                <button class="btn" id="single-submit" type="submit">classify</button>
+                <p class="hint" id="single-hint">
+                  nothing is stored — scored in-process and discarded.
+                  <span id="llm-disclosure" hidden>if the local model is unsure, the message
+                    text is also sent to groq's api for a second opinion.</span>
+                </p>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" hidden>
+            <form id="batch-form" novalidate>
+              <label class="field">
+                <span class="field__label">csv file — one message per row, first column</span>
+                <input class="file" id="csv-file" name="file" type="file" accept=".csv,text/csv">
+              </label>
+              <div class="bench__actions">
+                <button class="btn" id="batch-submit" type="submit">classify batch</button>
+                <p class="hint" id="batch-hint">up to <span id="max-rows">500</span> rows per upload.</p>
+              </div>
+            </form>
+          </section>
+
+          <div id="form-error" role="alert" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <!-- Apparatus — indicator dial. Not decoration: this is the live risk
+           readout, and its callouts carry real values from the served model. -->
+      <figure class="apparatus" aria-hidden="true">
+        <div class="dial" id="dial">
+          <svg class="dial__face" viewBox="0 0 200 200" focusable="false">
+            <path id="dial-arc" class="dial__track" d="M 32 158 A 90 90 0 1 1 168 158"></path>
+            <path class="dial__sweep" id="dial-sweep" d="M 32 158 A 90 90 0 1 1 168 158"></path>
+            <g class="dial__ticks" id="dial-ticks"></g>
+          </svg>
+          <span class="dial__needle" id="dial-needle"></span>
+          <span class="dial__hub"></span>
+          <span class="dial__glow"></span>
+          <div class="dial__readout">
+            <span class="dial__value" id="dial-value">—</span>
+            <span class="dial__unit">risk</span>
+          </div>
+          <span class="dial__stencil">SG-05</span>
+        </div>
+        <ul class="callouts">
+          <li class="callout" style="--y: 12%"><span>fraud line · 0.50</span></li>
+          <li class="callout" style="--y: 45%"><span>signals · 20</span></li>
+          <li class="callout" style="--y: 78%"><span>adv. macro f1 · 0.75</span></li>
+        </ul>
+      </figure>
+
     </div>
+  </section>
 
-    <section class="panel" id="panel-single" role="tabpanel" aria-labelledby="tab-single">
-      <form id="single-form" novalidate>
-        <label class="field">
-          <span class="mono-label field__label">SMS text</span>
-          <textarea class="input" id="sms-text" name="text" rows="7" maxlength="2000"
-            placeholder="Ndapota confirmai PIN yenyu pa http://ecocash-verify.tk/x9k2 kuti musarasikirwe nemari yenyu."
-            aria-describedby="single-hint"></textarea>
-        </label>
-        <div class="bench__actions">
-          <button class="btn" id="single-submit" type="submit">Classify</button>
-          <p class="hint" id="single-hint">
-            Nothing is stored — scored in-process and discarded.
-            <span id="llm-disclosure" hidden>If the local model is unsure, the message
-              text is also sent to Groq's API for a second opinion.</span>
-          </p>
-        </div>
-      </form>
-    </section>
+  <!-- Meter strip — one tick per engineered signal -->
+  <aside class="meter" aria-hidden="true">
+    <p class="meter__label">signal weights · 20</p>
+    <div class="meter__bars" id="meter-bars"></div>
+    <p class="meter__label meter__label--right" id="meter-state">awaiting input</p>
+  </aside>
 
-    <section class="panel" id="panel-batch" role="tabpanel" aria-labelledby="tab-batch" hidden>
-      <form id="batch-form" novalidate>
-        <label class="field">
-          <span class="mono-label field__label">CSV file — one message per row, first column</span>
-          <input class="file" id="csv-file" name="file" type="file" accept=".csv,text/csv">
-        </label>
-        <div class="bench__actions">
-          <button class="btn" id="batch-submit" type="submit">Classify batch</button>
-          <p class="hint" id="batch-hint">Up to <span id="max-rows">500</span> rows per upload.</p>
-        </div>
-      </form>
-    </section>
-
-    <div id="form-error" role="alert" aria-live="polite"></div>
-  </div>
-</main>
-
-<section class="results" id="results">
-
-    <!-- concise SR announcement: the full readout re-rendering would be a firehose -->
+  <!-- Readout — stat-led, the figure is the live score -->
+  <section class="results" id="results">
     <p id="a11y-status" class="visually-hidden" role="status" aria-live="polite"></p>
 
-
-    <!-- Empty state: name what the model checks, so the panel is never a void -->
     <div id="state-empty">
-      <div class="results__head">
-        <h2>Readout</h2>
-        <span class="mono-label">Awaiting input</span>
-      </div>
-      <p class="empty">
-        Classify a message to see its verdict, the features that drove it, and the full
-        risk-signal checklist — each signal reported whether or not it fired, with the
-        weight the model learned for it.
+      <p class="eyebrow">01 · readout</p>
+      <p class="figure figure--empty">—</p>
+      <p class="results__qualifier">
+        no message scored yet. every classification returns the verdict, the risk
+        score behind it, and the full signal checklist — each one reported whether
+        or not it fired, so you can see what the model looked for and did not find.
       </p>
     </div>
 
-    <!-- Single-message result -->
     <div id="state-single" hidden>
-      <div class="results__head">
-        <div class="verdict" id="verdict">
+      <p class="eyebrow">01 · readout</p>
+      <div class="verdict" id="verdict">
+        <p class="figure" id="verdict-riskpct">—</p>
+        <div class="verdict__side">
           <span class="verdict__chip" id="verdict-risk"></span>
-          <span class="confidence"><b id="verdict-riskpct"></b> risk</span>
-          <span class="verdict__sep" aria-hidden="true"></span>
-          <span class="confidence">closest match <b id="verdict-label"></b> <span id="verdict-conf"></span></span>
+          <p class="verdict__gloss">
+            closest match <b id="verdict-label"></b> <span id="verdict-conf"></span>
+          </p>
+          <p class="verdict__meta" id="verdict-meta"></p>
         </div>
-        <span class="mono-label" id="verdict-meta"></span>
       </div>
 
       <div id="uncertain-note"></div>
@@ -113,52 +156,68 @@
 
       <div class="readout">
         <div class="readout__col">
-          <h3>Risk signals checked</h3>
+          <h2 class="readout__title">risk signals checked</h2>
           <p class="readout__note">
-            Weight is the signal&rsquo;s learned influence toward this label; sign shows direction.
-            A filled mark means the signal fired.
+            weight is the signal's learned influence toward this label; sign shows
+            direction. a filled mark means the signal fired.
           </p>
           <ul class="signals" id="signals-list"></ul>
         </div>
         <div class="readout__col">
-          <h3>Top contributing features</h3>
+          <h2 class="readout__title">top contributing features</h2>
           <p class="readout__note">
-            Feature value &times; weight, ranked. Numeric specifics are normalised to placeholder
-            tokens before vectorising, so incidental digits never become vocabulary.
+            feature value × weight, ranked. numeric specifics are normalised to
+            placeholder tokens before vectorising, so incidental digits never
+            become vocabulary.
           </p>
           <ul class="tokens" id="tokens-list"></ul>
         </div>
       </div>
     </div>
 
-    <!-- Batch result -->
     <div id="state-batch" hidden>
-      <div class="results__head">
-        <h2>Batch readout</h2>
-        <span class="mono-label" id="batch-meta"></span>
-      </div>
+      <p class="eyebrow">01 · batch readout</p>
+      <p class="results__qualifier" id="batch-meta"></p>
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th scope="col">Message</th>
-              <th scope="col">Verdict</th>
-              <th scope="col">Risk</th>
-              <th scope="col">Closest match</th>
+              <th scope="col">message</th>
+              <th scope="col">verdict</th>
+              <th scope="col">risk</th>
+              <th scope="col">closest match</th>
             </tr>
           </thead>
           <tbody id="batch-rows"></tbody>
         </table>
       </div>
     </div>
+  </section>
 
-</section>
-</div>
+  <!-- Three-stat row — every number traceable to ml/metrics.json -->
+  <section class="stats">
+    <div class="stat">
+      <p class="stat__figure">2,953</p>
+      <p class="stat__label">held-out test messages</p>
+    </div>
+    <div class="stat">
+      <p class="stat__figure">0.75</p>
+      <p class="stat__label">adversarial macro f1</p>
+    </div>
+    <div class="stat">
+      <p class="stat__figure">1.00</p>
+      <p class="stat__label">recall · 40-case obfuscation suite</p>
+    </div>
+  </section>
 
-<footer class="footer">
-  <div class="shell footer__inner">
-    <span><b>SmishGuard</b> — smishing classifier, Zimbabwe mobile-money context.</span>
-    <span>Calibrated linear SVM · TF-IDF + 20 engineered signals</span>
+</main>
+
+<!-- Ft5 · statement -->
+<footer class="foot-stmt">
+  <p class="foot-stmt__line">a verdict you can argue with beats one you have to trust.</p>
+  <div class="foot-stmt__meta">
+    <span class="wordmark">smishguard</span>
+    <span class="foot-stmt__spec">calibrated linear svm · tf-idf + 20 engineered signals</span>
   </div>
 </footer>
 

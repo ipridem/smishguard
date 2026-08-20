@@ -159,6 +159,8 @@ function renderSingle(result) {
   renderLlmOpinion(result.llm_opinion);
   renderSignals(result.risk_signals);
   renderTokens(result.top_tokens);
+  setGauge(result.risk, verdict.severity);
+  renderMeter(result.risk_signals);
   showState("state-single");
 
   // #results itself isn't a live region — re-rendering the full readout on
@@ -374,6 +376,8 @@ function renderBatch(rows) {
 
   const flagged = rows.filter((r) => r.risk != null && r.risk >= meta.risk_fraud_threshold).length;
   $("batch-meta").textContent = `${rows.length} messages · ${flagged} at or above ${pct(meta.risk_fraud_threshold)} risk`;
+  setGauge(null, null);
+  $("meter-state").textContent = `${rows.length} rows · ${flagged} flagged`;
   showState("state-batch");
 
   $("a11y-status").textContent = `${rows.length} messages classified, ${flagged} flagged.`;
@@ -389,3 +393,125 @@ fetch("/api/meta")
     $("llm-disclosure").hidden = !data.llm_review_available;
   })
   .catch(() => { /* defaults already cover it */ });
+
+/* ——— Apparatus: the risk dial ——————————————————————————————
+ * The dial is the readout, not decoration: --risk drives the sweep, the
+ * needle and the halo, and severity recolours all three. Geometry is a 270°
+ * arc centred at (100,100), r=90, so value v sits at -135° + v·270°.
+ */
+const DIAL_SWEEP_DEG = 270;
+const DIAL_START_DEG = -135;
+const DIAL_ARC_LEN = 424.115;          // 2*pi*90 * (270/360), matches the path in index.html
+
+function dialPoint(value, radius) {
+  const rad = ((DIAL_START_DEG + value * DIAL_SWEEP_DEG) * Math.PI) / 180;
+  return [100 + radius * Math.sin(rad), 100 - radius * Math.cos(rad)];
+}
+
+(function buildDialTicks() {
+  const host = $("dial-ticks");
+  if (!host) return;
+  for (let i = 0; i <= 10; i++) {
+    const v = i / 10;
+    const major = v === 0 || v === 1;
+    const threshold = v === 0.5;                 // the F1-optimal fraud line
+    const [x1, y1] = dialPoint(v, major || threshold ? 76 : 80);
+    const [x2, y2] = dialPoint(v, 88);
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1.toFixed(2));
+    line.setAttribute("y1", y1.toFixed(2));
+    line.setAttribute("x2", x2.toFixed(2));
+    line.setAttribute("y2", y2.toFixed(2));
+    if (major) line.classList.add("is-major");
+    if (threshold) line.classList.add("is-threshold");
+    host.append(line);
+  }
+})();
+
+/* The needle angle, arc length and halo are written as resolved values rather
+ * than driven from a --risk custom property in calc(): an unregistered custom
+ * property inside calc() does not reliably invalidate, and registering it via
+ * @property did not fix it here either. Concrete values transition correctly
+ * and have no browser caveat. */
+function setGauge(risk, severity) {
+  const dial = $("dial");
+  if (!dial) return;
+  const v = risk == null ? 0 : risk;
+
+  $("dial-needle").style.transform =
+    `translateY(-100%) rotate(${(DIAL_START_DEG + v * DIAL_SWEEP_DEG).toFixed(2)}deg)`;
+  $("dial-sweep").style.strokeDashoffset = (DIAL_ARC_LEN * (1 - v)).toFixed(2);
+  dial.querySelector(".dial__glow").style.opacity = (0.25 + v * 0.75).toFixed(3);
+
+  if (severity) dial.dataset.severity = severity;
+  else delete dial.dataset.severity;
+  $("dial-value").textContent = risk == null ? "—" : pct(risk);
+}
+
+/* ——— Meter strip: one tick per engineered signal ————————————
+ * At rest the strip is flat and labelled "awaiting input" — an invented
+ * envelope here would be a decorative readout, which is the thing this
+ * whole page argues against. Heights come from |weight| once a real
+ * classification lands.
+ */
+const METER_SIGNALS = 20;
+
+(function buildMeter() {
+  const host = $("meter-bars");
+  if (!host) return;
+  for (let i = 0; i < METER_SIGNALS; i++) {
+    host.append(Object.assign(document.createElement("span"), { style: "--h: 12%" }));
+  }
+})();
+
+function renderMeter(signals) {
+  const host = $("meter-bars");
+  if (!host) return;
+  const peak = Math.max(...signals.map((s) => Math.abs(s.weight)), 0.01);
+  const bars = host.children;
+
+  // The strip is a fixed 20-tick instrument; a model with a different feature
+  // count still renders, it just fills fewer ticks.
+  for (let i = 0; i < bars.length; i++) {
+    const signal = signals[i];
+    if (!signal) {
+      bars[i].style.setProperty("--h", "12%");
+      delete bars[i].dataset.fired;
+      continue;
+    }
+    const height = 12 + (Math.abs(signal.weight) / peak) * 88;
+    bars[i].style.setProperty("--h", `${height.toFixed(1)}%`);
+    bars[i].dataset.fired = String(signal.present);
+  }
+  const fired = signals.filter((s) => s.present).length;
+  $("meter-state").textContent = `fired · ${fired} / ${signals.length}`;
+}
+
+/* ——— Palette drop ————————————————————————————————————————
+ * Day Foundry is the default at every entry point; night is opt-in and
+ * persisted. The OS preference deliberately does not decide - the page is
+ * specified light-first, so an unset choice always means day.
+ */
+(function dropToggle() {
+  const button = $("drop-toggle");
+  if (!button) return;
+
+  const current = () => document.documentElement.dataset.drop || "day";
+
+  function sync() {
+    const now = current();
+    const next = now === "night" ? "day" : "night";
+    button.setAttribute("aria-pressed", String(now === "night"));
+    button.setAttribute("aria-label", `Switch to ${next} foundry`);
+    $("drop-toggle-text").textContent = next;
+  }
+
+  button.addEventListener("click", () => {
+    const next = current() === "night" ? "day" : "night";
+    document.documentElement.dataset.drop = next;
+    try { localStorage.setItem("sg-drop", next); } catch { /* private mode — session only */ }
+    sync();
+  });
+
+  sync();
+})();

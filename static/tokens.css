@@ -1,82 +1,155 @@
-/* Design tokens: "Cobalt" theme, modern-minimal genre.
- * paper band: cool light · display style: grotesk-sans · accent hue: electric cobalt
- * Served from /tokens.css so the token block is portable AND actually reachable.
+/* Design tokens — theme "Lumen", atmospheric genre, two palette drops.
+ *
+ * Drop 01 · Day Foundry (default, light)   — indigo accent that REFRACTS.
+ * Drop 02 · Night Foundry (dark toggle)    — molten-brass accent that EMITS.
+ *
+ * Day is the default at every entry point; night is opt-in via the toggle and
+ * persisted. The OS preference deliberately does NOT decide — this page is
+ * specified light-first.
+ *
+ * paper band: light cool-bone / dark cool-violet (both H 265)
+ * display style: classical-serif-lowercase (Instrument Serif, roman)
+ * accent hue: deep indigo 268 (day) / molten brass 50 (night), coral chord 18
+ *
+ * Every colour on the page comes from this file. Nothing inlines a raw value.
  */
+
 :root {
-  /* — Surface —————————————————————————— */
-  --color-paper:        oklch(98.5% 0.004 250);
-  --color-paper-2:      oklch(96.4% 0.005 252);
-  --color-graphite:     oklch(22% 0.016 260);
-  --color-graphite-2:   oklch(19% 0.016 260);
+  color-scheme: light;
 
-  /* — Ink ——————————————————————————————— */
-  --color-ink:          oklch(24% 0.020 258);
-  --color-ink-2:        oklch(34% 0.018 257);
-  --color-ink-3:        oklch(52% 0.014 256);
-  --color-graphite-ink: oklch(92% 0.008 250);
-  --color-graphite-ink-2: oklch(72% 0.012 253);
-  --color-graphite-ink-3: oklch(64% 0.014 255);  /* 5.1:1 on graphite — AA for small text */
+  /* ── Canvas ─────────────────────────────────────────── */
+  --color-paper:        oklch(97% 0.008 265);
+  --color-paper-2:      oklch(94.5% 0.010 265);
+  --color-paper-3:      oklch(91% 0.012 265);
+  --color-paper-emit:   oklch(46% 0.24 268 / 0.03);
 
-  /* — Rules ————————————————————————————— */
-  --color-rule:         oklch(91% 0.006 252);
-  --color-rule-2:       oklch(31% 0.014 260);
+  /* ── Ink ────────────────────────────────────────────── */
+  --color-ink:          oklch(18% 0.014 265);
+  --color-ink-2:        oklch(32% 0.013 265);
+  --color-ink-3:        oklch(48% 0.012 265);   /* 4.9:1 on paper — AA body */
+  --color-muted:        oklch(50% 0.011 265);   /* mono labels — 4.5:1 on paper AND paper-2 */
 
-  /* — The one signal ———————————————————— */
-  --color-accent:       oklch(58% 0.200 256);
-  --color-accent-lift:  oklch(66% 0.180 256);
-  --color-accent-ink:   oklch(99% 0.002 250);
-  --color-accent-wash:  oklch(94% 0.032 254);
+  /* ── Rules ──────────────────────────────────────────── */
+  --color-rule:         oklch(88% 0.010 265);
+  --color-rule-2:       oklch(80% 0.012 265);
+  --rule-blueprint:     oklch(18% 0.014 265 / 0.045);
+  --rule-hair:          1px;
 
-  /* — Verdict semantics ————————————————— *
+  /* ── Accent · refraction ────────────────────────────── */
+  --color-accent:       oklch(46% 0.24 268);
+  --color-accent-lift:  oklch(40% 0.24 268);
+  --color-accent-ink:   oklch(99% 0.004 265);   /* on accent fill — 8.6:1 */
+  --color-accent-wash:  oklch(46% 0.24 268 / 0.08);
+  --color-accent-2:     oklch(52% 0.19 18);     /* coral chord — verb landmark */
+  --color-glow:         oklch(58% 0.22 268 / 0.28);
+  --color-glow-2:       oklch(58% 0.22 268 / 0.10);
+  --color-focus:        oklch(46% 0.24 268);
+
+  /* ── Verdict semantics ──────────────────────────────────
    * A classifier verdict is information, not decoration, so it earns colour.
    * Always paired with a text label — colour is never the only channel. */
-  --color-danger:       oklch(58% 0.185 25);
-  --color-danger-ink:   oklch(72% 0.160 27);
-  --color-safe:         oklch(58% 0.130 158);
-  --color-safe-ink:     oklch(74% 0.130 158);
-  --color-warn:         oklch(70% 0.145 75);
-  --color-warn-ink:     oklch(80% 0.135 78);
+  --color-danger:       oklch(48% 0.20 27);
+  --color-danger-ink:   oklch(99% 0.004 265);
+  --color-danger-wash:  oklch(48% 0.20 27 / 0.09);
+  --color-safe:         oklch(44% 0.12 158);
+  --color-safe-ink:     oklch(99% 0.004 265);
+  --color-safe-wash:    oklch(44% 0.12 158 / 0.10);
+  --color-warn:         oklch(52% 0.13 72);
+  --color-warn-ink:     oklch(99% 0.004 265);
+  --color-warn-wash:    oklch(52% 0.13 72 / 0.11);
 
-  /* — Type —————————————————————————————— */
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-body:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* ── Type — three families, no fourth ───────────────── */
+  --font-display: "Instrument Serif", "Tiempos Headline", ui-serif, Georgia, serif;
+  --font-body:    "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-xs:      0.75rem;
   --text-sm:      0.8125rem;
   --text-base:    0.9375rem;
   --text-lg:      1.0625rem;
-  --text-xl:      1.375rem;
+  --text-xl:      1.3125rem;
   --text-2xl:     1.75rem;
-  --text-display: clamp(2.25rem, 4.2vw + 0.75rem, 3.75rem);
+  --text-3xl:     2.25rem;
+  --text-display: clamp(2.25rem, 3.4vw + 1rem, 3.5rem);
+  --text-figure:  clamp(3.5rem, 9vw + 0.5rem, 7rem);
 
-  /* — Space (4pt scale) ————————————————— */
-  --space-2xs:    0.25rem;
-  --space-xs:     0.5rem;
-  --space-sm:     0.75rem;
-  --space-md:     1rem;
-  --space-lg:     1.5rem;
-  --space-xl:     2rem;
-  --space-2xl:    3rem;
-  --space-3xl:    4.5rem;
+  --tracking-micro:  0.10em;
+  --tracking-tight: -0.032em;
+  --lh-display:      1.02;
 
-  /* — Radii (drawn with a ruler) ———————— */
+  /* ── Space (4pt scale) ──────────────────────────────── */
+  --space-3xs:    0.25rem;
+  --space-2xs:    0.5rem;
+  --space-xs:     0.75rem;
+  --space-sm:     1rem;
+  --space-md:     1.5rem;
+  --space-lg:     2rem;
+  --space-xl:     3rem;
+  --space-2xl:    4.5rem;
+  --space-3xl:    7rem;
+  --page-gutter:  clamp(1.25rem, 4vw, 3.5rem);
+
+  /* ── Radii ──────────────────────────────────────────── */
   --radius-control: 6px;
   --radius-card:    10px;
+  --radius-pill:    999px;
 
-  /* — Motion ———————————————————————————— */
+  /* ── Motion ─────────────────────────────────────────── */
   --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in:      cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out:  cubic-bezier(0.65, 0, 0.35, 1);
-  --dur-short:    120ms;
-  --dur-mid:      240ms;
-  --dur-long:     560ms;
+  --ease-soft:    cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-short:    140ms;
+  --dur-mid:      320ms;
+  --dur-long:     600ms;
+  --dur-pulse:    4s;
 
-  /* — Elevation scale (named, never 9999) — */
-  --z-base:       0;
+  /* ── Elevation (named, never 9999) ──────────────────── */
+  --z-base:        0;
   --z-raised:     10;
-  --z-sticky:     20;
-  --z-overlay:    30;
-  --z-modal:      40;
-  --z-toast:      50;
+  --z-sticky:    200;
+  --z-sticky-nav: 300;
+
+  --shadow-lift:  0 18px 44px -30px oklch(18% 0.014 265 / 0.45);
+}
+
+/* ── Drop 02 · Night Foundry ───────────────────────────────
+ * Explicit choice wins; system preference applies only when no choice is set.
+ * Both blocks redefine the same token set — no colour is defined only here. */
+:root[data-drop="night"] {
+  color-scheme: dark;
+
+  --color-paper:        oklch(13% 0.014 265);
+  --color-paper-2:      oklch(16.5% 0.016 265);
+  --color-paper-3:      oklch(21% 0.017 265);
+  --color-paper-emit:   oklch(76% 0.17 50 / 0.04);
+
+  --color-ink:          oklch(96% 0.006 262);
+  --color-ink-2:        oklch(88% 0.008 262);
+  --color-ink-3:        oklch(74% 0.010 262);
+  --color-muted:        oklch(66% 0.012 262);
+
+  --color-rule:         oklch(26% 0.015 265);
+  --color-rule-2:       oklch(34% 0.016 265);
+  --rule-blueprint:     oklch(96% 0.006 262 / 0.04);
+
+  --color-accent:       oklch(76% 0.17 50);
+  --color-accent-lift:  oklch(84% 0.15 50);
+  --color-accent-ink:   oklch(16% 0.020 50);
+  --color-accent-wash:  oklch(76% 0.17 50 / 0.12);
+  --color-accent-2:     oklch(72% 0.16 18);
+  --color-glow:         oklch(80% 0.16 50 / 0.42);
+  --color-glow-2:       oklch(80% 0.16 50 / 0.14);
+  --color-focus:        oklch(80% 0.15 50);
+
+  --color-danger:       oklch(66% 0.19 27);
+  --color-danger-ink:   oklch(14% 0.020 27);
+  --color-danger-wash:  oklch(66% 0.19 27 / 0.16);
+  --color-safe:         oklch(72% 0.14 158);
+  --color-safe-ink:     oklch(14% 0.020 158);
+  --color-safe-wash:    oklch(72% 0.14 158 / 0.15);
+  --color-warn:         oklch(78% 0.14 78);
+  --color-warn-ink:     oklch(14% 0.020 78);
+  --color-warn-wash:    oklch(78% 0.14 78 / 0.16);
+
+  --shadow-lift:  0 24px 60px -28px oklch(0% 0 0 / 0.55);
 }
